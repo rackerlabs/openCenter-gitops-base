@@ -1,5 +1,4 @@
 
-
 ```
 kubernetes-platform/
 ├── README.md
@@ -36,44 +35,29 @@ kubernetes-platform/
                 ├── pod-security-policies/
                 └── rbac/
 │   │   └── monitoring/
-├── applications/            # managed applications
-│   ├── common/
-│   │   ├── keycloak
-    │   ├── ingress-controllers/
-    │   ├── cert-manager/
-    │   │   ├── kustomization.yaml
-    │   └   └── helm-values.yaml
-    │   │   ├── kustomization.yaml
-    │   └   └── helm-release.yaml
-    │   ├── monitoring/
-    │   └── logging/
-│   ├── base/
-│   │   ├── flux-system/
-│   │   ├── sitecore/
-│   │   ├── openstack/
-│   │   │   └── base   # /etc/genestack/
-│   │   ├── managedServices/
-│   │   └── common/
-│   ├── overlays/
-│   │   ├── production/
+├── applications
+│   ├── base
+│   │   ├── genestack
+│   │   │   └── placeholder.txt
+│   │   └── managed-services
+│   │       ├── cert-manager
+│   │       ├── ingress-nginx
+│   │       ├── keycloak
+│   │       └── sealed-secrets
+│   ├── overlays
+│   │   ├── delta
 │   │   │   ├── flux-system
-│   │   │   └── kustomization.yaml
-│   │   ├── staging/
-│   └── └── development/
-    ├── platform-services/             # Core Managed services base
-    │   ├── ingress-controllers/
-    │   ├── cert-manager/
-    │   │   ├── kustomization.yaml
-    │   └   └── helm-values.yaml
-    │   │   ├── kustomization.yaml
-    │   └   └── helm-release.yaml
-    │   ├── monitoring/
-    │   └── logging/
-    └── policies/
-        ├── network-policies/
-        ├── pod-security-policies/
-        └── rbac/
+│   │   │   ├── kustomization.yaml
+│   │   │   └── managed-services
+│   │   ├── dev
+│   │   │   └── placeholder.txt
+│   │   └── production
+│   │       └── placeholder.txt
+│   └── policies
+│       ├── network-policies
+│       │   └── placeholder.txt
+│       ├── pod-security-policies
+│       │   └── placeholder.txt
+│       └── rbac
+│           └── placeholder.txt
 ```
-
-
-
