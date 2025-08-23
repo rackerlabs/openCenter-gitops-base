@@ -1,0 +1,27 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+spec:
+  releaseName: cert-manager
+  interval: 30s
+  driftDetection:
+    mode: enabled
+  targetNamespace: cert-manager
+  chart:
+    spec:
+      chart: cert-manager
+      version: v1.18.2
+      sourceRef:
+        kind: HelmRepository
+        name: jetstack
+        namespace: flux-system
+  valuesFrom:
+    - kind: ConfigMap
+      name: cert-manager-values
+      valuesKey: hardened_values_v1.18.2.yaml
+    - kind: ConfigMap
+      name: cert-manager-values
+      valuesKey: override_values.yaml

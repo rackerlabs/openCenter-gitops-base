@@ -1,0 +1,13 @@
+namespace: keycloak
+
+resources:
+  - "./namespace.yaml"
+  - "./helmrelease.yaml"
+
+configMapGenerator:
+  - name: keycloak-values
+    files:
+      - helm-values/hardened_values_25.2.0.yaml
+      - helm-values/override_values.yaml
+    options:
+      disableNameSuffixHash: true
