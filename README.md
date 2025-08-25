@@ -41,14 +41,37 @@ kubernetes-platform/
 │   │   │   └── placeholder.txt
 │   │   └── managed-services
 │   │       ├── cert-manager
+│   │       │   └── placeholder.txt
+│   │       ├── gateway-api
+│   │       │   └── placeholder.txt
 │   │       ├── ingress-nginx
+│   │       │   └── placeholder.txt
 │   │       ├── keycloak
-│   │       └── sealed-secrets
+│   │       │   └── placeholder.txt
+│   │       ├── sealed-secrets
+│   │       │   └── placeholder.txt
+│   │       └── sources
+│   │           ├── bitnami.yaml
+│   │           ├── envoyproxy.yaml
+│   │           ├── ingress-nginx.yaml
+│   │           ├── jetstack.yaml
+│   │           ├── kustomization.yaml
+│   │           └── sealed-secrets.yaml
 │   ├── overlays
 │   │   ├── delta
 │   │   │   ├── flux-system
+│   │   │   │   ├── gotk-components.yaml
+│   │   │   │   ├── gotk-sync.yaml
+│   │   │   │   └── kustomization.yaml
 │   │   │   ├── kustomization.yaml
 │   │   │   └── managed-services
+│   │   │       ├── cert-manager
+│   │   │       ├── fluxcd
+│   │   │       ├── gateway
+│   │   │       ├── gateway-api
+│   │   │       ├── ingress-nginx
+│   │   │       ├── keycloak
+│   │   │       └── sealed-secrets
 │   │   ├── dev
 │   │   │   └── placeholder.txt
 │   │   └── production
