@@ -18,9 +18,9 @@ spec:
         name: ingress-nginx
         namespace: flux-system
   valuesFrom:
-    - kind: ConfigMap
+    - kind: Secret
       name: ingress-nginx-values
       valuesKey: hardened_values_4.13.0.yaml
-    - kind: ConfigMap
+    - kind: Secret
       name: ingress-nginx-values
       valuesKey: override_values.yaml

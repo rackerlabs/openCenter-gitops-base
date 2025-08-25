@@ -18,9 +18,9 @@ spec:
         name: sealed-secrets
         namespace: flux-system
   valuesFrom:
-    - kind: ConfigMap
+    - kind: Secret
       name: sealed-secrets-values
       valuesKey: hardened_values_2.17.3.yaml
-    - kind: ConfigMap
+    - kind: Secret
       name: sealed-secrets-values
       valuesKey: override_values.yaml

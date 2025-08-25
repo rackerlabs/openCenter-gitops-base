@@ -5,6 +5,9 @@ metadata:
   name: keycloak-shared
   namespace: flux-system
 spec:
+  dependsOn:
+    - name: helm-sources
+      namespace: flux-system
   interval: 1m
   path: ./applications/base/managed-services/keycloak/
   prune: true
@@ -31,5 +34,9 @@ spec:
     kind: GitRepository
     name: flux-system
     namespace: flux-system
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
   targetNamespace: keycloak
   wait: true

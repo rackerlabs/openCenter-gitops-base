@@ -5,6 +5,9 @@ metadata:
   name: ingress-nginx-shared
   namespace: flux-system
 spec:
+  dependsOn:
+    - name: helm-sources
+      namespace: flux-system
   interval: 1m
   path: ./applications/base/managed-services/ingress-nginx/
   prune: true

@@ -1,15 +1,15 @@
-namespace: keycloak
+namespace: gateway-api
 
 resources:
   - "./namespace.yaml"
   - "./helmrelease.yaml"
 
 secretGenerator:
-  - name: keycloak-values
-    namespace: keycloak
+  - name: envoy-gateway-api-values
+    namespace: gateway-api
     type: Opaque
     files:
-      - hardened.yaml=helm-values/hardened_values_25.2.0.yaml
+      - hardened.yaml=helm-values/hardened_values_v0.0.0.yaml
       - override.yaml=helm-values/override_values.yaml
     options:
       disableNameSuffixHash: true

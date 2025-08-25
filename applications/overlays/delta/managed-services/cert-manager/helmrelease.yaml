@@ -19,9 +19,9 @@ spec:
         name: jetstack
         namespace: flux-system
   valuesFrom:
-    - kind: ConfigMap
+    - kind: Secret
       name: cert-manager-values
       valuesKey: hardened_values_v1.18.2.yaml
-    - kind: ConfigMap
+    - kind: Secret
       name: cert-manager-values
       valuesKey: override_values.yaml

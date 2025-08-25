@@ -1,0 +1,3 @@
+creation_rules:
+  - path_regex: '^managed-services/.*/helm-values/.*\.ya?ml$'
+    age: age1ydr20ml7gdda4pkq5exe4amr426xtxnkwl2sdtt2zlxnu2jhg90qe2u4qk
