@@ -37,32 +37,37 @@ kubernetes-platform/
 │   │   └── monitoring/
 ├── applications
 │   ├── base
-│   │   ├── genestack
-│   │   │   └── placeholder.txt
-│   │   └── managed-services
-│   │       ├── cert-manager
-│   │       │   └── placeholder.txt
-│   │       ├── gateway-api
-│   │       │   └── placeholder.txt
-│   │       ├── ingress-nginx
-│   │       │   └── placeholder.txt
-│   │       ├── keycloak
-│   │       │   └── placeholder.txt
-│   │       ├── sealed-secrets
-│   │       │   └── placeholder.txt
-│   │       └── sources
-│   │           ├── bitnami.yaml
-│   │           ├── envoyproxy.yaml
-│   │           ├── ingress-nginx.yaml
-│   │           ├── jetstack.yaml
-│   │           ├── kustomization.yaml
-│   │           └── sealed-secrets.yaml
+│   │   ├── genestack-sources
+│   │   │   ├── genestack.yaml
+│   │   │   ├── gitrepository-aggregator.yaml
+│   │   │   ├── kustomization.yaml
+│   │   │   └── openstack-helm.yaml
+│   │   ├── managed-services
+│   │   │   ├── cert-manager
+│   │   │   │   └── placeholder.txt
+│   │   │   ├── gateway-api
+│   │   │   │   └── placeholder.txt
+│   │   │   ├── ingress-nginx
+│   │   │   │   └── placeholder.txt
+│   │   │   ├── keycloak
+│   │   │   │   └── placeholder.txt
+│   │   │   ├── sealed-secrets
+│   │   │   │   └── placeholder.txt
+│   │   │   └── sources
+│   │   │       ├── bitnami.yaml
+│   │   │       ├── envoyproxy.yaml
+│   │   │       ├── ingress-nginx.yaml
+│   │   │       ├── jetstack.yaml
+│   │   │       ├── kustomization.yaml
+│   │   │       └── sealed-secrets.yaml
 │   ├── overlays
 │   │   ├── delta
 │   │   │   ├── flux-system
 │   │   │   │   ├── gotk-components.yaml
 │   │   │   │   ├── gotk-sync.yaml
 │   │   │   │   └── kustomization.yaml
+│   │   │   ├── genestack
+│   │   │   │   └── fluxcd
 │   │   │   ├── kustomization.yaml
 │   │   │   └── managed-services
 │   │   │       ├── cert-manager
