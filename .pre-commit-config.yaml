@@ -63,8 +63,19 @@ repos:
         stages:
           - manual
         args:
-          - >-
-            -d {extends: default, rules: {line-length: {disable: true}, indentation: {spaces: 2}}, ignore: [submodules/]}
+          - -d
+          - |
+            {
+              extends: default, 
+              rules: {
+                line-length: {
+                  disable: true
+                }, 
+                indentation: {
+                  spaces: 2
+                }
+              }, ignore: [submodules/]
+            }
   - repo: https://github.com/ansible-community/ansible-lint
     rev: v24.9.2
     hooks:
