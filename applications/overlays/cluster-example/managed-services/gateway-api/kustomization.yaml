@@ -1,4 +1,4 @@
-namespace: gateway-api
+namespace: envoy-gateway-system
 
 resources:
   - "./namespace.yaml"
@@ -6,7 +6,7 @@ resources:
 
 secretGenerator:
   - name: envoy-gateway-api-values
-    namespace: gateway-api
+    namespace: envoy-gateway-system
     type: Opaque
     files:
       - hardened.yaml=helm-values/hardened_values_v0.0.0.yaml

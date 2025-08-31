@@ -2,16 +2,16 @@ apiVersion: gateway.networking.k8s.io/v1beta1
 kind: Gateway
 metadata:
   name: rmpk-gateway
-  namespace: demo
+  namespace: rackspace-system
   annotations:
     cert-manager.io/cluster-issuer: rackspace-ca
 spec:
   gatewayClassName: eg
   listeners:
-    - name: test-app-https
+    - name: keycloak-https
       port: 443
       protocol: HTTPS
-      hostname: test-app.pbandark.com
+      hostname: keycloak.rmpk.dev
       allowedRoutes:
         namespaces:
           from: All
@@ -20,4 +20,4 @@ spec:
         certificateRefs:
           - group: ""
             kind: Secret
-            name: test-app-tls
+            name: keycloak-tls

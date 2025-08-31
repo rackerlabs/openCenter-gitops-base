@@ -3,6 +3,8 @@ namespace: keycloak
 resources:
   - "./namespace.yaml"
   - "./helmrelease.yaml"
+  - "./backendtlspolicy.yaml"
+  - "./httproute.yaml"
 
 secretGenerator:
   - name: keycloak-values
