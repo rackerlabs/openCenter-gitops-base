@@ -1,15 +1,13 @@
 namespace: envoy-gateway-system
 
 resources:
-  - "./namespace.yaml"
-  - "./helmrelease.yaml"
+  - "./networkpolicy.yaml"
 
 secretGenerator:
-  - name: envoy-gateway-api-values
+  - name: envoy-gateway-api-values-override
     namespace: envoy-gateway-system
     type: Opaque
     files:
-      - hardened.yaml=helm-values/hardened_values_v0.0.0.yaml
       - override.yaml=helm-values/override_values.yaml
     options:
       disableNameSuffixHash: true
