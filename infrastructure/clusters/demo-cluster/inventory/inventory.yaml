@@ -1,0 +1,39 @@
+all:
+  vars:
+    cloud_name: "demo-cluster"
+    ansible_ssh_common_args: '-o IdentityFile=/etc/openCenter/infrastructure/clusters/demo-cluster/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -o IdentityFile=/etc/openCenter/infrastructure/clusters/demo-cluster/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -q ubuntu@66.70.103.117"'
+    ansible_user: "ubuntu"
+    ansible_python_interpreter: /usr/bin/python3
+    k8s_internal_ip: 
+    kube_version: 1.31.4
+  children:
+    k8s_cluster:
+      vars:
+        cluster_name: cluster.local
+        supplementary_addresses_in_ssl_keys: [66.70.103.79,k8s.demo-cluster.demo.mk8s.net,]
+      children:
+        kube_control_plane:
+          children:
+            oc_controlplane_nodes: null     
+        etcd:
+          children:
+            oc_controlplane_nodes: null
+        kube_node:
+          children:
+            oc_worker_nodes: null
+
+oc_controlplane_nodes:
+  hosts:
+    demo-cluster-cp0:
+      ansible_host: 10.2.188.113
+    demo-cluster-cp1:
+      ansible_host: 10.2.188.219
+    demo-cluster-cp2:
+      ansible_host: 10.2.188.235
+
+oc_worker_nodes:
+  hosts:
+    demo-cluster-wn0:
+      ansible_host: 10.2.188.77
+    demo-cluster-wn1:
+      ansible_host: 10.2.188.213

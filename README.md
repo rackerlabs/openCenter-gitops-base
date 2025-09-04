@@ -27,41 +27,8 @@ kubernetes-platform/
 │   │   │   ├── kubeconfig.yaml
 │   │   │   └── kustomization.yaml
 │   │   └── development/
-│   ├── base/
-│   │   ├── networking/
-│   │   ├── security/
-            └── policies/
-                ├── network-policies/
-                ├── pod-security-policies/
-                └── rbac/
-│   │   └── monitoring/
-├── applications
-│   ├── base
-│   │   ├── genestack-sources
-│   │   │   ├── genestack.yaml
-│   │   │   ├── gitrepository-aggregator.yaml
-│   │   │   ├── kustomization.yaml
-│   │   │   └── openstack-helm.yaml
-│   │   ├── managed-services
-│   │   │   ├── cert-manager
-│   │   │   │   └── placeholder.txt
-│   │   │   ├── gateway-api
-│   │   │   │   └── placeholder.txt
-│   │   │   ├── ingress-nginx
-│   │   │   │   └── placeholder.txt
-│   │   │   ├── keycloak
-│   │   │   │   └── placeholder.txt
-│   │   │   ├── sealed-secrets
-│   │   │   │   └── placeholder.txt
-│   │   │   └── sources
-│   │   │       ├── bitnami.yaml
-│   │   │       ├── envoyproxy.yaml
-│   │   │       ├── ingress-nginx.yaml
-│   │   │       ├── jetstack.yaml
-│   │   │       ├── kustomization.yaml
-│   │   │       └── sealed-secrets.yaml
 │   ├── overlays
-│   │   ├── delta
+│   │   ├── cluster-example
 │   │   │   ├── flux-system
 │   │   │   │   ├── gotk-components.yaml
 │   │   │   │   ├── gotk-sync.yaml
@@ -81,11 +48,4 @@ kubernetes-platform/
 │   │   │   └── placeholder.txt
 │   │   └── production
 │   │       └── placeholder.txt
-│   └── policies
-│       ├── network-policies
-│       │   └── placeholder.txt
-│       ├── pod-security-policies
-│       │   └── placeholder.txt
-│       └── rbac
-│           └── placeholder.txt
 ```
