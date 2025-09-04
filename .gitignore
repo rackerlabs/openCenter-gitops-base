@@ -60,3 +60,11 @@ build/
 *.swp
 *.bak
 *.tmp
+
+#RMPK specific
+.bin/
+id_rsa
+id_rsa.pub
+kubeconfig.yaml
+ca.crt
+ca.key
