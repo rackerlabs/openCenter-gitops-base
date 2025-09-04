@@ -39,7 +39,7 @@ locals {
   # Creates a DNS record using the LB floating IP and dns_zone_name
   use_designate                           = false
   # dns_zone_name is the dns zone to create if use_designate is true
-  dns_zone_name                           = "${local.cluster_name}.demo.mk8s.net"
+  dns_zone_name                           = "${local.cluster_name}.sjc3.rmpk.dev"
   # DNS servers to configure on the nodes
   dns_nameservers                         = ["8.8.8.8", "8.8.4.4"]
   image_id                                = "56277265-8f0c-40dc-87e2-944b7d320dae"
@@ -115,7 +115,7 @@ locals {
 
 module "openstack-nova" {
   # source = "../../../install/iac/infra/openstack-nova"
-  source = "git@github.com:rackerlabs/openCenter.git//iac/infra/openstack-nova?ref=initial-iac"
+  source = "git@github.com:rackerlabs/openCenter.git//install/iac/infra/openstack-nova?ref=main"
   availability_zone             = local.availability_zone
   ca_certificates               = local.ca_certificates
   use_octavia                   = local.use_octavia
@@ -179,7 +179,7 @@ module "openstack-nova" {
 
 module "kubespray-cluster" {
   # source = "git@github.com:rackerlabs/terraform-mpk-kubespray.git/calico?ref=main"
-  source = "git@github.com:rackerlabs/openCenter.git//iac/kubespray?ref=initial-iac"
+  source = "git@github.com:rackerlabs/openCenter.git//install/iac/kubespray?ref=main"
   # source                                  = "../../../install/iac/kubespray"
   address_bastion                         = module.openstack-nova.bastion_floating_ip
   cluster_name                            = local.cluster_name
@@ -219,7 +219,7 @@ module "kubespray-cluster" {
 
 module "calico" {
   # source = "../../../install/iac/calico"
-  source = "git@github.com:rackerlabs/openCenter.git//iac/calico?ref=initial-iac"
+  source = "git@github.com:rackerlabs/openCenter.git//install/iac/calico?ref=main"
 
   calico_interface_autodetect      = local.calico_interface_autodetect
   calico_encapsulation_type        = local.calico_encapsulation_type
