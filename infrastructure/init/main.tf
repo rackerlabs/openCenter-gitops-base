@@ -225,6 +225,7 @@ module "calico" {
   calico_encapsulation_type        = local.calico_encapsulation_type
   calico_nat_outgoing              = local.calico_nat_outgoing
   calico_interface_autodetect_cidr = local.calico_interface_autodetect_cidr == "" ? local.subnet_nodes : local.calico_interface_autodetect_cidr
+  cluster_name                     = local.cluster_name
   cni_iface                        = local.cni_iface
   deploy_cluster                   = local.deploy_cluster
   k8s_internal_ip                  = module.openstack-nova.k8s_internal_ip
