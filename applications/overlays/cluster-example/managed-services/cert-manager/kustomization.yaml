@@ -2,16 +2,13 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: cert-manager
 resources:
-  - namespace.yaml
-  - helmrelease.yaml
-  - rackspace-selfsigned-issuer.yaml
-  - rackspace-selfsigned-ca.yaml
-  - rackspace-ca-issuer.yaml
+  - "./rackspace-selfsigned-issuer.yaml"
+  - "./rackspace-selfsigned-ca.yaml"
+  - "./rackspace-ca-issuer.yaml"
 secretGenerator:
-  - name: cert-manager-values
+  - name: cert-manager-values-override
     type: Opaque
     files:
-      - "helm-values/hardened_values_v1.18.2.yaml"
-      - "helm-values/override_values.yaml"
+      - override.yaml=helm-values/override_values.yaml
     options:
       disableNameSuffixHash: true

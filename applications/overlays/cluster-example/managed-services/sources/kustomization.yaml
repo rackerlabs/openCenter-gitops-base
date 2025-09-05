@@ -3,3 +3,4 @@ kind: Kustomization
 namespace: flux-system
 resources:
   - "./opencenter-gateway-api.yaml"
+  - "./opencenter-cert-manager.yaml"
