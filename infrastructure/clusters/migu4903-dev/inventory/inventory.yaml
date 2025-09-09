@@ -1,0 +1,41 @@
+all:
+  vars:
+    cloud_name: "migu4903-dev"
+    ansible_ssh_common_args: '-o IdentityFile=/Users/migu4903/gitclones/openCenter-gitops-template/infrastructure/clusters/migu4903-dev/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -o IdentityFile=/Users/migu4903/gitclones/openCenter-gitops-template/infrastructure/clusters/migu4903-dev/id_rsa -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -q ubuntu@66.70.103.196"'
+    ansible_user: "ubuntu"
+    ansible_python_interpreter: /usr/bin/python3
+    k8s_internal_ip: 
+    kube_version: 1.30.4
+  children:
+    k8s_cluster:
+      vars:
+        cluster_name: cluster.local
+        supplementary_addresses_in_ssl_keys: [66.70.103.71,k8s.migu4903-dev.demo.mk8s.net,]
+      children:
+        kube_control_plane:
+          children:
+            oc_controlplane_nodes: null     
+        etcd:
+          children:
+            oc_controlplane_nodes: null
+        kube_node:
+          children:
+            oc_worker_nodes: null
+
+oc_controlplane_nodes:
+  hosts:
+    migu4903-dev-cp0:
+      ansible_host: 10.2.184.115
+    migu4903-dev-cp1:
+      ansible_host: 10.2.184.81
+    migu4903-dev-cp2:
+      ansible_host: 10.2.184.229
+
+oc_worker_nodes:
+  hosts:
+    migu4903-dev-wn0:
+      ansible_host: 10.2.184.134
+    migu4903-dev-wn1:
+      ansible_host: 10.2.184.58
+    migu4903-dev-wn2:
+      ansible_host: 10.2.184.172

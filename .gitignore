@@ -68,3 +68,7 @@ id_rsa.pub
 kubeconfig.yaml
 ca.crt
 ca.key
+kubespray/
+ansible-hardening/
+.python-version
+credentials/
