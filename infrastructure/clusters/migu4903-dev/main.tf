@@ -45,7 +45,7 @@ locals {
   image_id                                = "56277265-8f0c-40dc-87e2-944b7d320dae"
   image_id_windows                        = "899af84f-d98f-4255-bf98-ceba5e3a8257"
   k8s_api_port                            = 443
-  worker_count                            = 2
+  worker_count                            = 3
   worker_count_windows                    = 0
   # Enter 1 or 3 masters.
   master_count                            = 3
