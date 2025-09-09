@@ -1,0 +1,9 @@
+---
+image:
+  tag: '1755897906'
+
+config:
+  logging:
+    log_level: INFO
+  alert_proxy_config:
+    create_ticket: false
