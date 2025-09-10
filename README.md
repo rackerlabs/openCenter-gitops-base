@@ -1,5 +1,6 @@
 
 ```
+TODO: Templatize the overlays files to allow for setting cluster name dynamically
 kubernetes-platform/
 ├── README.md
 ├── setup.sh  # This setups things that are needed but not commit.

@@ -15,7 +15,7 @@ spec:
     kind: GitRepository
     name: opencenter-kube-prometheus-stack
     namespace: flux-system
-  path: applications/base/managed-services/kube-prometheus-stack
+  path: applications/base/services/kube-prometheus-stack
   targetNamespace: kube-prometheus-stack
   prune: true
   wait: true
