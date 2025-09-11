@@ -16,7 +16,7 @@ spec:
     name: opencenter-kube-prometheus-stack
     namespace: flux-system
   path: applications/base/services/kube-prometheus-stack
-  targetNamespace: kube-prometheus-stack
+  targetNamespace: observability
   prune: true
   wait: true
   healthChecks:
@@ -36,9 +36,6 @@ metadata:
   name: kube-prometheus-stack-override
   namespace: flux-system
 spec:
-  dependsOn:
-    - name: kube-prometheus-stack-base
-      namespace: flux-system
   interval: 5m
   retryInterval: 1m
   timeout: 10m
