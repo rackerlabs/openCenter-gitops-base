@@ -1,0 +1,10 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: alert-proxy
+spec:
+  interval: 5m
+  url: https://github.com/rackerlabs/alert-proxy.git
+  ref:
+    branch: main

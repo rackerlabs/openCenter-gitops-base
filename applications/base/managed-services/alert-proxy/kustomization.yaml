@@ -1,0 +1,11 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources: [./namespace.yaml, ./source.yaml, ./helmrelease.yaml]
+secretGenerator:
+  - name: alert-proxy-values-base
+    namespace: envoy-gateway-system
+    type: Opaque
+    files: [hardened.yaml=helm-values/hardened_values_v0.0.1.yaml]
+    options:
+      disableNameSuffixHash: true

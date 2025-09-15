@@ -1,0 +1,23 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: postgres-cluster
+  namespace: keycloak
+spec:
+  dockerImage: ghcr.io/zalando/spilo-16:3.2-p3
+  teamId: "acid"
+  numberOfInstances: 3
+  postgresql:
+    version: "16"
+    parameters:
+      shared_buffers: "2GB"
+      max_connections: "1024"
+      log_statement: "all"
+  volume:
+    size: 20Gi
+  databases:
+    keycloak: keycloak
+  users:
+    keycloak:
+      - superuser
+      - createdb

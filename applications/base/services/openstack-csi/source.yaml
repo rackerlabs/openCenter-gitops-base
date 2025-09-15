@@ -1,0 +1,8 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: cpo
+spec:
+  url: https://kubernetes.github.io/cloud-provider-openstack
+  interval: 1h

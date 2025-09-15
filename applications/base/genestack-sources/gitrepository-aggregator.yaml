@@ -1,0 +1,18 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: genestack-root
+  namespace: flux-system
+spec:
+  url: ssh://git@github.com/pratik705/openCenter-poc
+  ref:
+    branch: main
+  interval: 1m
+  secretRef:
+    name: flux-system
+  include:
+    - repository:
+        name: genestack-repo
+      fromPath: /
+      toPath: applications/base/genestack

@@ -1,0 +1,86 @@
+---
+namespace: rackspace
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/rackerlabs/genestack-images/alert-proxy
+  name: alert-proxy
+  tag: latest
+  pullPolicy: IfNotPresent
+
+nodeSelector:
+  node-role.kubernetes.io/worker: worker
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+# These secrets must exist in the target namespace before deploying the chart.
+secrets:
+  coreAccountId:
+    name: core-account-id-secret
+    key: core_account_number
+  overseerDeviceId:
+    name: overseer-core-device-id-secret
+    key: overseer_core_device_id
+  accountServiceToken:
+    name: account-service-token-secret
+    key: account_service_token
+  alertManagerBaseUrl:
+    name: alert-manager-base-url-secret
+    key: alert_manager_base_url
+
+config:
+  debug: false
+  app_debug: false
+  logging:
+    log_level: INFO
+  alert_proxy_config:
+    alert_verification: true
+    create_ticket: true
+    # core_account_id, core_overseer_id, account_secret,
+    # am_v2_base_url are now expected to be provided via environment variables,
+    # which are sourced from existing Kubernetes Secrets.
+
+uwsgi:
+  module: wsgi:app
+  uid: alert-proxy
+  gid: alert-proxy
+  httpPort: 8000
+  master: true
+  processes: 4
+  threads: 1
+  vacuum: true
+  dieOnTerm: true
+  disableLogging: true
+
+livenessProbe:
+  httpGet:
+    path: /process
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /process
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+serviceAccount: {}
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
+ingress: {}
+resources: {}
+autoscaling: {}
+volumes: []
+volumeMounts: []
+tolerations: []
+affinity: {}

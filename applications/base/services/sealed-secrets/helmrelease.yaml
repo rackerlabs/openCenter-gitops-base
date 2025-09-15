@@ -1,0 +1,37 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: sealed-secrets
+  namespace: sealed-secrets
+spec:
+  releaseName: sealed-secrets
+  interval: 5m
+  timeout: 10m
+  driftDetection:
+    mode: enabled
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    remediation:
+      retries: 0
+      remediateLastFailure: false
+  targetNamespace: sealed-secrets
+  chart:
+    spec:
+      chart: sealed-secrets
+      version: 2.17.3
+      sourceRef:
+        kind: HelmRepository
+        name: sealed-secrets
+        namespace: sealed-secrets
+  valuesFrom:
+    - kind: Secret
+      name: sealed-secrets-values-base
+      valuesKey: hardened.yaml
+    - kind: Secret
+      name: sealed-secrets-values-override
+      valuesKey: override.yaml
+      optional: true

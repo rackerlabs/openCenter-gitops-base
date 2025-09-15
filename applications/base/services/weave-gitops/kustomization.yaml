@@ -1,0 +1,9 @@
+---
+namespace: flux-system
+resources: [./source.yaml, ./helmrelease.yaml]
+secretGenerator:
+  - name: weave-gitops-values-base
+    type: Opaque
+    files: [hardened.yaml=helm-values/hardened_values_4.0.36.yaml]
+    options:
+      disableNameSuffixHash: true

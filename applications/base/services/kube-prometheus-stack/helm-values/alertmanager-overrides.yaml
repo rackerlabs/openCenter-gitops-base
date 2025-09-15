@@ -1,0 +1,43 @@
+---
+alertmanager:
+  ## Alertmanager configuration directives
+  ## ref: https://prometheus.io/docs/alerting/configuration/#configuration-file
+  ##      https://prometheus.io/webtools/alerting/routing-tree-editor/
+  config:
+    global:
+      resolve_timeout: 5m
+    inhibit_rules:
+      - source_matchers: [severity = critical]
+        target_matchers: [severity =~ warning|info]
+        equal: [namespace, alertname]
+      - source_matchers: [severity = warning]
+        target_matchers: [severity = info]
+        equal: [namespace, alertname]
+      - source_matchers: [alertname = InfoInhibitor]
+        target_matchers: [severity = info]
+        equal: [namespace]
+      - target_matchers: [alertname = InfoInhibitor]
+    route:
+      group_by: [namespace, alertname]
+      group_wait: 30s
+      group_interval: 60s
+      repeat_interval: 12h
+      routes:
+        - receiver: 'null'
+          matchers: [alertname = "Watchdog"]
+        - receiver: warning_alerts_receiver
+          continue: false
+          matchers: [severity =~ "warning"]
+        - receiver: alert_proxy_receiver
+          continue: false
+          matchers: [severity =~ "critical']
+    receivers:
+      - name: 'null'
+      - name: warning_alerts_receiver
+        msteams_configs:
+          - send_resolved: true
+            webhook_url: ''
+      - name: alert_proxy_receiver
+        webhook_configs:
+          - url: http://alert-proxy.rackspace.svc.cluster.local/alert/process
+            send_resolved: true
