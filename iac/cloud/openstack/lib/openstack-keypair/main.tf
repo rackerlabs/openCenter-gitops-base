@@ -1,5 +1,5 @@
 resource "openstack_compute_keypair_v2" "ssh_keypair" {
-  name = format("%skey", var.naming_prefix)
+  name = replace(format("%skey", var.naming_prefix), ".", "-")
 }
 
 resource "local_file" "private_key" {
