@@ -6,6 +6,6 @@ resources: [./namespace.yaml, ./source.yaml, ./helmrelease.yaml]
 secretGenerator:
   - name: postgres-operator-values-base
     type: Opaque
-    files: [hardened.yaml=helm-values/hardened_values_1.14.0.yaml]
+    files: [hardened.yaml=helm-values/hardened-values-1.14.0.yaml]
     options:
       disableNameSuffixHash: true

@@ -6,6 +6,6 @@ resources: [./namespace.yaml, ./source.yaml, ./helmrelease.yaml]
 secretGenerator:
   - name: openstack-csi-values-base
     type: Opaque
-    files: [hardened.yaml=helm-values/hardened_values_2.33.1.yaml]
+    files: [hardened.yaml=helm-values/hardened-values-2.33.1.yaml]
     options:
       disableNameSuffixHash: true

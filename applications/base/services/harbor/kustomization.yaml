@@ -6,6 +6,6 @@ resources: [./namespace.yaml, ./source.yaml, ./helmrelease.yaml]
 secretGenerator:
   - name: harbor-values-base
     type: Opaque
-    files: [hardened.yaml=helm-values/hardened_values_1.17.2.yaml]
+    files: [hardened.yaml=helm-values/hardened-values-1.17.2.yaml]
     options:
       disableNameSuffixHash: true

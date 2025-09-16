@@ -6,6 +6,6 @@ resources: [./namespace.yaml, ./source.yaml, ./helmrelease.yaml]
 secretGenerator:
   - name: metallb-values-base
     type: Opaque
-    files: [hardened.yaml=helm-values/hardened_values_0.15.2.yaml]
+    files: [hardened.yaml=helm-values/hardened-values-0.15.2.yaml]
     options:
       disableNameSuffixHash: true
