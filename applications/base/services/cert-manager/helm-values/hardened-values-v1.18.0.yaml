@@ -33,6 +33,9 @@ global:
     create: true
     # Aggregate ClusterRoles to Kubernetes default user-facing roles. For more information, see [User-facing roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)
     aggregateClusterRoles: true
+    # To use HTTP-01 ACME challenges, cert-manager needs extra permissions to create pods.
+    # If you want to avoid this added permission and disable HTTP-01 set this value.
+    disableHTTPChallengesRole: false
 
   podSecurityPolicy:
     # Create PodSecurityPolicy for cert-manager.
@@ -47,7 +50,7 @@ global:
 
   leaderElection:
     # Override the namespace used for the leader election lease.
-    namespace: "cert-manager"
+    namespace: "kube-system"
 
     # The duration that non-leader candidates will wait after observing a
     # leadership renewal until attempting to acquire leadership of a led but
@@ -74,7 +77,7 @@ installCRDs: false
 crds:
   # This option decides if the CRDs should be installed
   # as part of the Helm installation.
-  enabled: true
+  enabled: false
 
   # This option makes it so that the "helm.sh/resource-policy": keep
   # annotation is added to the CRD. This will prevent Helm from uninstalling
@@ -94,7 +97,7 @@ crds:
 #
 # Note that cert-manager uses leader election to ensure that there can
 # only be a single instance active at a time.
-replicaCount: 2
+replicaCount: 1
 
 # Deployment update strategy for the cert-manager controller deployment.
 # For more information, see the [Kubernetes documentation](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy).
@@ -218,10 +221,6 @@ enableCertificateOwnerRef: false
 # version (currently `controller.config.cert-manager.io/v1alpha1`). You can pin
 # the version by specifying the `apiVersion` yourself.
 #
-config:
-  apiVersion: controller.config.cert-manager.io/v1alpha1
-  kind: ControllerConfiguration
-  enableGatewayAPI: true
 # For example:
 #  config:
 #    apiVersion: controller.config.cert-manager.io/v1alpha1
@@ -235,7 +234,7 @@ config:
 #    kubernetesAPIBurst: 9000
 #    numberOfConcurrentWorkers: 200
 #    enableGatewayAPI: true
-#    # Feature gates as of v1.18.1. Listed with their default values.
+#    # Feature gates as of v1.18.0. Listed with their default values.
 #    # See https://cert-manager.io/docs/cli/controller/
 #    featureGates:
 #      AdditionalCertificateOutputFormats: true # GA - default=true
@@ -252,8 +251,6 @@ config:
 #      UseCertificateRequestBasicConstraints: false # ALPHA - default=false
 #      UseDomainQualifiedFinalizer: true # GA - default=true
 #      ValidateCAA: false # ALPHA - default=false
-#      DefaultPrivateKeyRotationPolicyAlways: true # BETA - default=true
-#      ACMEHTTP01IngressPathTypeExact: true # BETA - default=true
 #    # Configure the metrics server for TLS
 #    # See https://cert-manager.io/docs/devops-tips/prometheus-metrics/#tls
 #    metricsTLSConfig:
@@ -262,6 +259,7 @@ config:
 #        secretName: "cert-manager-metrics-ca"
 #        dnsNames:
 #        - cert-manager-metrics
+config: {}
 
 # Setting Nameservers for DNS01 Self Check.
 # For more information, see the [cert-manager documentation](https://cert-manager.io/docs/configuration/acme/dns01/#setting-nameservers-for-dns01-self-check).
@@ -1337,10 +1335,7 @@ startupapicheck:
   #    memory: 32Mi
   #
   # For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
-  resources:
-    requests:
-      cpu: 10m
-      memory: 100Mi
+  resources: {}
 
   # The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
   # matching labels.
