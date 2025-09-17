@@ -4,7 +4,6 @@ metadata:
   name: postgres-cluster
   namespace: keycloak
 spec:
-  dockerImage: ghcr.io/zalando/spilo-16:3.2-p3
   teamId: "acid"
   numberOfInstances: 3
   postgresql:
