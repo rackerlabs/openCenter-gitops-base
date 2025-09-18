@@ -3,7 +3,7 @@
 This directory contains the **base manifests** for deploying the [Envoy Gateway](https://gateway.envoyproxy.io/) as a managed service.
 It is intended to be consumed by **cluster repositories** as a remote base, with the option to provide cluster-specific overrides.
 
-- `namespace.yaml` - Defines the `envoy-gateway-system` namespace.
+- `namespace.yaml` - Defines the `opencenter-system` namespace.
 - `envoyproxy-source.yaml` - Defines the helm repository to install `envoy-gateway-api`.
 - `helmrelease.yaml` - FluxCD `HelmRelease` for deploying Envoy Gateway from the configured Helm repository.
 - `helm-values/hardened_values_v0.0.0.yaml` - Default “hardened” baseline values.
@@ -32,7 +32,7 @@ spec:
     name: opencenter-gateway-api #<= its the base flux gitrepository resource
     namespace: flux-system
   path: base/services/gateway-api
-  targetNamespace: envoy-gateway-system
+  targetNamespace: opencenter-system
   wait: true
 ```
 
@@ -65,11 +65,11 @@ User can provide **cluster-specific overrides** without modifying this base.
 2. Reference both hardened values (from this base) and local overrides in a `Secret` (via `secretGenerator` or plain YAML). Example in cluster repo:
 
 ```yaml
-namespace: envoy-gateway-system
+namespace: opencenter-system
 
 secretGenerator:
   - name: envoy-gateway-api-values-override
-    namespace: envoy-gateway-system
+    namespace: opencenter-system
     type: Opaque
     files:
       - override.yaml=helm-values/override_values.yaml
@@ -110,7 +110,7 @@ applications/overlays/<cluster>/services/gateway-api/
 `kustomization.yaml:`
 
 ```yaml
-namespace: envoy-gateway-system
+namespace: opencenter-system
 
 resources:
   - "./opencenter-source.yaml"
@@ -118,7 +118,7 @@ resources:
 
 secretGenerator:
   - name: envoy-gateway-api-values-override
-    namespace: envoy-gateway-system
+    namespace: opencenter-system
     type: Opaque
     files:
       - override.yaml=helm-values/override_values.yaml
