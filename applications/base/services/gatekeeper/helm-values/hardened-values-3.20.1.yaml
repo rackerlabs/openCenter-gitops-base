@@ -1,0 +1,462 @@
+# Hardened values for gatekeeper v3.20.1
+# Open Policy Agent Gatekeeper for admission control and compliance
+
+# Global Configuration
+replicas: 3
+revisionHistoryLimit: 10
+
+# Audit Configuration
+auditInterval: 60
+metricsBackends: ["prometheus"]
+auditMatchKindOnly: false
+constraintViolationsLimit: 20
+auditFromCache: false
+disableAudit: false
+auditChunkSize: 500
+
+# Mutation Configuration
+disableMutation: false
+mutatingWebhookName: gatekeeper-mutating-webhook-configuration
+mutatingWebhookFailurePolicy: Ignore
+mutatingWebhookReinvocationPolicy: Never
+mutatingWebhookTimeoutSeconds: 1
+mutationAnnotations: false
+
+# Validation Configuration
+disableValidatingWebhook: false
+validatingWebhookName: gatekeeper-validating-webhook-configuration
+validatingWebhookTimeoutSeconds: 3
+validatingWebhookFailurePolicy: Ignore
+enableDeleteOperations: false
+enableConnectOperations: false
+
+# External Data Configuration
+enableExternalData: true
+enableGeneratorResourceExpansion: true
+externaldataProviderResponseCacheTTL: 3m
+
+# Health and TLS Configuration
+enableTLSHealthcheck: false
+maxServingThreads: -1
+
+# Kubernetes Native Validation
+enableK8sNativeValidation: true
+
+# Logging Configuration
+logLevel: INFO
+logDenies: true
+logMutations: true
+admissionEventsInvolvedNamespace: false
+auditEventsInvolvedNamespace: false
+
+# Resource Quota
+resourceQuota: true
+
+# Pod Limits
+podCountLimit: "100"
+
+# Security Profile
+enableRuntimeDefaultSeccompProfile: true
+
+# Image Configuration
+image:
+  repository: openpolicyagent/gatekeeper
+  crdRepository: openpolicyagent/gatekeeper-crds
+  release: v3.20.1
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+# Controller Manager Configuration
+controllerManager:
+  serviceAccount:
+    name: gatekeeper-admin
+  containerName: manager
+  exemptNamespaces: []
+  exemptNamespacePrefixes: []
+  hostNetwork: false
+  dnsPolicy: ClusterFirst
+  port: 8443
+  metricsPort: 8888
+  healthPort: 9090
+  readinessTimeout: 1
+  livenessTimeout: 1
+  priorityClassName: system-cluster-critical
+  disableCertRotation: false
+  tlsMinVersion: 1.3
+  clientCertName: ""
+  strategyType: RollingUpdate
+  strategyRollingUpdate: {}
+
+  # Pod Labels
+  podLabels: {}
+
+  # Affinity - Enhanced for better distribution
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: gatekeeper.sh/operation
+                  operator: In
+                  values:
+                    - webhook
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+
+  # Topology Spread Constraints
+  topologySpreadConstraints: []
+
+  # Tolerations
+  tolerations: []
+
+  # Node Selector
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # Resources - Enhanced for production
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  # Security Context - Hardened
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsGroup: 999
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+  # Pod Security Context
+  podSecurityContext:
+    fsGroup: 999
+    supplementalGroups:
+      - 999
+
+  # Extra RBAC Rules
+  extraRules: []
+
+  # Network Policy
+  networkPolicy:
+    enabled: true
+    ingress:
+      # Allow webhook traffic from API server
+      - from: []
+        ports:
+          - protocol: TCP
+            port: 8443
+      # Allow Prometheus scraping
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                name: observability
+        ports:
+          - protocol: TCP
+            port: 8888
+
+  # Webhook Operations
+  disableWebhookOperation: false
+  disableGenerateOperation: false
+
+# Audit Configuration
+audit:
+  # Export Configuration
+  exportConnection:
+    path: /tmp/violations/topics
+    maxAuditResults: 3
+  exportVolumeMount:
+    path: /tmp/violations
+  exportVolume:
+    name: tmp-violations
+    emptyDir: {}
+
+  # Export Sidecar - Disabled by default for security
+  # exportSidecar:
+  #   name: reader
+  #   image: ghcr.io/open-policy-agent/fake-reader:latest
+  #   imagePullPolicy: Always
+
+  serviceAccount:
+    name: gatekeeper-admin
+  containerName: manager
+  hostNetwork: false
+  dnsPolicy: ClusterFirst
+  metricsPort: 8888
+  healthPort: 9090
+  readinessTimeout: 1
+  livenessTimeout: 1
+  priorityClassName: system-cluster-critical
+  disableCertRotation: false
+
+  # Pod Labels
+  podLabels: {}
+
+  # Affinity
+  affinity: {}
+
+  # Tolerations
+  tolerations: []
+
+  # Node Selector
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # Resources
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  # Security Context - Hardened
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsGroup: 999
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+  # Pod Security Context
+  podSecurityContext:
+    fsGroup: 999
+    supplementalGroups:
+      - 999
+
+  # Write to RAM Disk
+  writeToRAMDisk: false
+
+  # Extra RBAC Rules
+  extraRules: []
+
+  # Operations Configuration
+  disableGenerateOperation: false
+  disableAuditOperation: false
+  disableStatusOperation: false
+
+# CRDs Configuration
+crds:
+  affinity: {}
+  tolerations: []
+  nodeSelector:
+    kubernetes.io/os: linux
+  resources: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsGroup: 65532
+    runAsNonRoot: true
+    runAsUser: 65532
+    seccompProfile:
+      type: RuntimeDefault
+
+# Pod Disruption Budget
+pdb:
+  controllerManager:
+    minAvailable: 2
+
+# Service Configuration
+service: {}
+
+# Disabled Builtins for Security
+disabledBuiltins: ["{http.send}"]
+
+# Pod Security Policy (Deprecated)
+psp:
+  enabled: false
+
+# Upgrade CRDs
+upgradeCRDs:
+  serviceAccount:
+    create: true
+    name: gatekeeper-admin-upgrade-crds
+  enabled: true
+  extraRules: []
+  priorityClassName: ""
+
+# RBAC
+rbac:
+  create: true
+
+# External Certificate Injection
+externalCertInjection:
+  enabled: false
+  secretName: gatekeeper-webhook-server-cert
+
+# Service Account
+serviceAccount:
+  gatekeeperAdmin:
+    create: true
+
+# Post Install Configuration
+postInstall:
+  labelNamespace:
+    serviceAccount:
+      name: gatekeeper-update-namespace-label
+      create: true
+    enabled: true
+    extraRules: []
+    image:
+      repository: openpolicyagent/gatekeeper-crds
+      tag: v3.20.1
+      pullPolicy: IfNotPresent
+      pullSecrets: []
+    extraNamespaces: []
+    podSecurity:
+      - "pod-security.kubernetes.io/audit=restricted"
+      - "pod-security.kubernetes.io/audit-version=latest"
+      - "pod-security.kubernetes.io/warn=restricted"
+      - "pod-security.kubernetes.io/warn-version=latest"
+      - "pod-security.kubernetes.io/enforce=restricted"
+      - "pod-security.kubernetes.io/enforce-version=v1.24"
+    extraAnnotations: {}
+    priorityClassName: ""
+
+  probeWebhook:
+    enabled: true
+    image:
+      repository: curlimages/curl
+      tag: 8.12.0
+      pullPolicy: IfNotPresent
+      pullSecrets: []
+    waitTimeout: 60
+    httpTimeout: 2
+    insecureHTTPS: false
+    priorityClassName: ""
+
+  affinity: {}
+  tolerations: []
+  nodeSelector:
+    kubernetes.io/os: linux
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsGroup: 999
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+# Post Upgrade Configuration
+postUpgrade:
+  labelNamespace:
+    serviceAccount:
+      name: gatekeeper-update-namespace-label-post-upgrade
+      create: true
+    enabled: false
+    image:
+      repository: openpolicyagent/gatekeeper-crds
+      tag: v3.20.1
+      pullPolicy: IfNotPresent
+      pullSecrets: []
+    extraNamespaces: []
+    podSecurity:
+      - "pod-security.kubernetes.io/audit=restricted"
+      - "pod-security.kubernetes.io/audit-version=latest"
+      - "pod-security.kubernetes.io/warn=restricted"
+      - "pod-security.kubernetes.io/warn-version=latest"
+      - "pod-security.kubernetes.io/enforce=restricted"
+      - "pod-security.kubernetes.io/enforce-version=v1.24"
+    extraAnnotations: {}
+    priorityClassName: ""
+  affinity: {}
+  tolerations: []
+  nodeSelector:
+    kubernetes.io/os: linux
+  resources: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsGroup: 999
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+# Pre Uninstall Configuration
+preUninstall:
+  deleteWebhookConfigurations:
+    serviceAccount:
+      name: gatekeeper-delete-webhook-configs
+      create: true
+    extraRules: []
+    enabled: false
+    image:
+      repository: openpolicyagent/gatekeeper-crds
+      tag: v3.20.1
+      pullPolicy: IfNotPresent
+      pullSecrets: []
+    priorityClassName: ""
+  affinity: {}
+  tolerations: []
+  nodeSelector:
+    kubernetes.io/os: linux
+  resources: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsGroup: 999
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+# Additional Security and Monitoring
+podAnnotations: {}
+auditPodAnnotations: {}
+podLabels: {}
+secretAnnotations: {}
+
+# Excluded Namespaces - Updated for current setup
+validatingWebhookExemptNamespacesLabels:
+  kubernetes.io/metadata.name:
+    - gatekeeper-system
+    - kube-system
+    - kube-public
+    - kube-node-lease
+    - flux-system
+    - cert-manager
+    - ingress-nginx
+    - observability
+    - rbac-system
+    - kyverno
+
+mutatingWebhookExemptNamespacesLabels:
+  kubernetes.io/metadata.name:
+    - gatekeeper-system
+    - kube-system
+    - kube-public
+    - kube-node-lease
+    - flux-system
+    - cert-manager
+    - ingress-nginx
+    - observability
+    - rbac-system
+    - kyverno

@@ -1,0 +1,385 @@
+# Hardened values for falco v6.2.5
+# Runtime security monitoring and threat detection
+
+###############################
+# General deployment settings #
+###############################
+
+image:
+  pullPolicy: IfNotPresent
+  registry: docker.io
+  repository: falcosecurity/falco
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+
+# Pod configuration
+podAnnotations: {}
+podLabels: {}
+podPriorityClassName: system-cluster-critical
+
+# Security contexts
+podSecurityContext: {}
+
+# Container security context - Falco needs privileges for syscall monitoring
+containerSecurityContext:
+  privileged: true
+
+# SCC for OpenShift
+scc:
+  create: true
+
+# Resources
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+
+# Node scheduling
+nodeSelector:
+  kubernetes.io/os: linux
+
+affinity: {}
+
+# Tolerations to run on all nodes including masters
+tolerations:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/control-plane
+  - effect: NoSchedule
+    operator: Exists
+  - effect: NoExecute
+    operator: Exists
+
+# Health checks
+healthChecks:
+  livenessProbe:
+    initialDelaySeconds: 60
+    timeoutSeconds: 5
+    periodSeconds: 15
+  readinessProbe:
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 15
+
+# TTY for immediate log display
+tty: false
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# RBAC
+rbac:
+  create: true
+
+#########################
+# Scenario requirements #
+#########################
+
+# Controller configuration - Deploy as DaemonSet for node coverage
+controller:
+  kind: daemonset
+  annotations: {}
+  labels: {}
+  daemonset:
+    updateStrategy:
+      type: RollingUpdate
+
+# Network services configuration
+services: []
+
+# Metrics configuration - Enhanced for production monitoring
+metrics:
+  enabled: true
+  interval: 1h
+  outputRule: true
+  rulesCountersEnabled: true
+  resourceUtilizationEnabled: true
+  stateCountersEnabled: true
+  kernelEventCountersEnabled: true
+  libbpfStatsEnabled: true
+  convertMemoryToMB: true
+  includeEmptyValues: false
+  kernelEventCountersPerCPUEnabled: false
+  service:
+    create: true
+    type: ClusterIP
+    labels:
+      app: falco
+    annotations: {}
+    ports:
+      metrics:
+        port: 8765
+        targetPort: 8765
+        protocol: "TCP"
+
+# File access configuration
+mounts:
+  volumes: []
+  volumeMounts: []
+
+# Driver settings - Use modern eBPF for better performance
+driver:
+  enabled: true
+  kind: modern_ebpf
+  kmod:
+    bufSizePreset: 4
+    dropFailedExit: false
+  ebpf:
+    path: "${HOME}/.falco/falco-bpf.o"
+    hostNetwork: false
+    leastPrivileged: false
+    bufSizePreset: 4
+    dropFailedExit: false
+  modernEbpf:
+    leastPrivileged: false
+    bufSizePreset: 4
+    dropFailedExit: false
+    cpusForEachBuffer: 2
+  gvisor:
+    runsc:
+      path: /home/containerd/usr/local/sbin
+      root: /run/containerd/runsc
+      config: /run/containerd/runsc/config.toml
+  loader:
+    enabled: true
+    initContainer:
+      image:
+        pullPolicy: IfNotPresent
+        registry: docker.io
+        repository: falcosecurity/falco-driver-loader
+        tag: ""
+      env: []
+      args: []
+      resources: {}
+      securityContext: {}
+
+# Collectors for data enrichment
+collectors:
+  enabled: true
+
+  # Legacy collectors - disabled in favor of containerEngine
+  docker:
+    enabled: false
+    socket: /var/run/docker.sock
+  containerd:
+    enabled: false
+    socket: /run/host-containerd/containerd.sock
+  crio:
+    enabled: false
+    socket: /run/crio/crio.sock
+
+  # Modern container engine collector
+  containerEngine:
+    enabled: true
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.3.6"
+    labelMaxLen: 100
+    withSize: false
+    hooks: ["create"]
+    engines:
+      docker:
+        enabled: true
+        sockets: ["/var/run/docker.sock"]
+      podman:
+        enabled: true
+        sockets: ["/run/podman/podman.sock"]
+      containerd:
+        enabled: true
+        sockets: ["/run/host-containerd/containerd.sock"]
+      cri:
+        enabled: true
+        sockets:
+          - "/run/containerd/containerd.sock"
+          - "/run/crio/crio.sock"
+          - "/run/k3s/containerd/containerd.sock"
+          - "/run/host-containerd/containerd.sock"
+      lxc:
+        enabled: true
+      libvirt_lxc:
+        enabled: true
+      bpm:
+        enabled: true
+
+  # Kubernetes metadata collection
+  kubernetes:
+    enabled: false  # Disabled by default, can be enabled if k8s-metacollector is deployed
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.3.1"
+    collectorHostname: ""
+    collectorPort: ""
+    verbosity: info
+    hostProc: /host
+
+###########################
+# Extras and customization #
+############################
+
+extra:
+  env: []
+  args: []
+  initContainers: []
+
+podHostname: ""
+
+# Certificates configuration
+certs:
+  existingSecret: ""
+  server:
+    key: ""
+    crt: ""
+  ca:
+    crt: ""
+  existingClientSecret: ""
+  client:
+    key: ""
+    crt: ""
+
+# Custom rules for OIDC and RBAC monitoring
+customRules:
+  oidc-rbac-rules.yaml: |
+    # OIDC Authentication monitoring
+    - rule: OIDC Authentication Failure
+      desc: Detect failed OIDC authentication attempts
+      condition: >
+        k8s_audit and ka.verb=create and
+        ka.target.resource=tokenreviews and
+        ka.response_code>=400
+      output: >
+        OIDC authentication failed
+        (user=%ka.user.name verb=%ka.verb uri=%ka.uri.param
+        resp=%ka.response_code reason=%ka.response_reason)
+      priority: WARNING
+      tags: [oidc, authentication, security]
+
+    # RBAC Violations
+    - rule: RBAC Permission Denied
+      desc: Detect RBAC permission denied events
+      condition: >
+        k8s_audit and ka.response_code=403
+      output: >
+        RBAC permission denied
+        (user=%ka.user.name verb=%ka.verb resource=%ka.target.resource
+        namespace=%ka.target.namespace reason=%ka.response_reason)
+      priority: WARNING
+      tags: [rbac, authorization, security]
+
+    # Privileged Container Detection
+    - rule: Privileged Container Started
+      desc: Detect when privileged containers are started
+      condition: >
+        spawned_process and container and proc.name != "falco"
+        and k8s.pod.privileged=true
+      output: >
+        Privileged container started
+        (user=%ka.user.name command=%proc.cmdline
+        container=%container.name pod=%k8s.pod.name)
+      priority: WARNING
+      tags: [container, privilege, security]
+
+    # Suspicious Network Activity
+    - rule: Outbound Connection to Suspicious Domain
+      desc: Detect outbound connections to potentially malicious domains
+      condition: >
+        outbound and fd.snet exists and
+        (fd.snet contains ".onion" or
+         fd.snet contains "pastebin" or
+         fd.snet contains "bit.ly")
+      output: >
+        Outbound connection to suspicious domain
+        (command=%proc.cmdline connection=%fd.name
+        container=%container.name pod=%k8s.pod.name)
+      priority: WARNING
+      tags: [network, suspicious, security]
+
+########################
+# Falco integrations   #
+########################
+
+# Falcosidekick for alert forwarding
+falcosidekick:
+  enabled: false
+  fullfqdn: false
+  listenPort: ""
+
+# Response actions
+responseActions:
+  enabled: false
+
+falco-talon: {}
+
+####################
+# falcoctl config  #
+####################
+falcoctl:
+  image:
+    pullPolicy: IfNotPresent
+    registry: docker.io
+    repository: falcosecurity/falcoctl
+    tag: "0.11.2"
+
+  artifact:
+    install:
+      enabled: true
+      env: []
+      envFrom: []
+      args: ["--log-format=json"]
+      resources: {}
+      securityContext: {}
+      mounts:
+        volumeMounts: []
+
+    follow:
+      enabled: true
+      env: []
+      envFrom: []
+      args: ["--log-format=json"]
+      resources: {}
+      securityContext: {}
+      mounts:
+        volumeMounts: []
+
+  config:
+    indexes:
+      - name: falcosecurity
+        url: https://falcosecurity.github.io/falcoctl/index.yaml
+
+    artifact:
+      allowedTypes:
+        - rulesfile
+        - plugin
+      install:
+        resolveDeps: true
+        refs: [falco-rules:4]
+        rulesfilesDir: /rulesfiles
+        pluginsDir: /plugins
+      follow:
+        refs: [falco-rules:4]
+        every: 6h
+        falcoversions: http://localhost:8765/versions
+        rulesfilesDir: /rulesfiles
+        pluginsDir: /plugins
+
+# ServiceMonitor for Prometheus
+serviceMonitor:
+  create: true
+  path: /metrics
+  labels:
+    app: falco
+  selector: {}
+  interval: 30s
+  scheme: http
+  tlsConfig: {}
+  bearerTokenFile: ""
+  bearerTokenSecret: {}
+  relabelings: []
+  targetLabels: []
+  metricRelabelings: []

@@ -1,0 +1,258 @@
+# Hardened values for kyverno v3.3.6
+# Policy engine for Kubernetes with OIDC integration
+
+# Admission Controller Configuration
+admissionController:
+  replicas: 3
+
+  # Security contexts
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+
+  container:
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+
+  # Resource management
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+  # Node scheduling
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # Pod disruption budget
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+
+# Background Controller Configuration
+backgroundController:
+  replicas: 2
+
+  # Security contexts
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+
+  container:
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+
+  # Resource management
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Node scheduling
+  nodeSelector:
+    kubernetes.io/os: linux
+
+# Cleanup Controller Configuration
+cleanupController:
+  replicas: 2
+
+  # Security contexts
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+
+  container:
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+
+  # Resource management
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Node scheduling
+  nodeSelector:
+    kubernetes.io/os: linux
+
+# Reports Controller Configuration
+reportsController:
+  replicas: 2
+
+  # Security contexts
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+
+  container:
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+
+  # Resource management
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Node scheduling
+  nodeSelector:
+    kubernetes.io/os: linux
+
+# Global Configuration
+config:
+  # Exclude namespaces from policy enforcement
+  excludeNamespaces:
+    - kube-system
+    - kube-public
+    - kube-node-lease
+    - kyverno
+    - flux-system
+    - cert-manager
+    - ingress-nginx
+    - observability
+
+  # OIDC integration for user context in policies
+  oidc:
+    enabled: true
+    # Extract user information from OIDC tokens
+    userClaim: "preferred_username"
+    groupsClaim: "groups"
+    # Audit user actions in policy reports
+    auditUserInfo: true
+
+# Policy Defaults
+policyDefaults:
+  # Set default validation failure action
+  validationFailureAction: "Audit"
+  # Background processing for existing resources
+  background: true
+  # Webhook timeout
+  webhookTimeoutSeconds: 10
+
+# Grafana Dashboard Integration
+grafana:
+  enabled: true
+  namespace: observability
+
+# Service Monitor for Prometheus
+serviceMonitor:
+  enabled: true
+  namespace: kyverno
+  labels:
+    app: kyverno
+  interval: 30s
+
+# Network Policies
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow webhook traffic from API server
+    - from: []
+      ports:
+        - protocol: TCP
+          port: 9443
+    # Allow Prometheus scraping
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: observability
+      ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow Kubernetes API access
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+
+# Features Configuration
+features:
+  # Enable admission control
+  admissionReports: true
+  # Enable background scanning
+  backgroundScan: true
+  # Enable configuration management
+  configMapCaching: true
+  # Enable policy exceptions
+  policyExceptions: true
+  # Enable validating admission policy support
+  validatingAdmissionPolicy: true
+  # Enable auto-generation of RBAC resources
+  generateValidatingAdmissionPolicy: false
+
+# Affinity configuration for better distribution
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                  - admission-controller
+                  - background-controller
+                  - cleanup-controller
+                  - reports-controller
+          topologyKey: kubernetes.io/hostname
+
+# Logging configuration
+logging:
+  level: 2  # Info level
+  format: json

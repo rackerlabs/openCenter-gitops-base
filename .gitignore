@@ -61,8 +61,8 @@ build/
 *.bak
 *.tmp
 
-# 
-applications/overlays
+# local git ignore
+.mygitignore
 
 
 # openCenter repo specific

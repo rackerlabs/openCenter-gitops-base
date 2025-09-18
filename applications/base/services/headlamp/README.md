@@ -1,6 +1,6 @@
 # Headlamp Kubernetes Dashboard with OIDC
 
-This directory contains the Headlamp Kubernetes dashboard configuration with OIDC authentication support for secure access to the cluster.
+This directory contains the Headlamp v0.35.0 Kubernetes dashboard configuration with OIDC authentication support for secure access to the cluster.
 
 ## Overview
 
@@ -15,9 +15,9 @@ Headlamp is a Kubernetes web UI that provides:
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   User Browser  │───▶│  Ingress/NGINX   │───▶│    Headlamp     │
+│   User Browser  │───▶│    Ingress       │───▶│    Headlamp     │
 └─────────────────┘    └──────────────────┘    │     Pods        │
-                                                └─────────────────┘
+                                               └─────────────────┘
                                                          │
                                                          ▼
                                                 ┌─────────────────┐
@@ -140,22 +140,175 @@ subjects:
 
 ## Deployment
 
-### Using Flux CD (Recommended)
+### Quick Start Deployment Guide
 
-1. **Ensure the secret exists** in the cluster
-2. **Update parent kustomization** to include headlamp:
+Follow these steps to deploy headlamp with OIDC authentication in your openCenter cluster:
 
-   ```yaml
-   # In applications/overlays/your-cluster/kustomization.yaml
-   resources:
-     - ../../base/services/headlamp
+#### Step 1: Configure Your OIDC Provider
+
+First, set up your OIDC provider (Keycloak, Authentik, etc.) with the following settings:
+
+**Keycloak Example:**
+1. Create a new client in your Keycloak realm
+2. Configure client settings:
    ```
+   Client ID: headlamp
+   Client Protocol: openid-connect
+   Access Type: confidential
+   Valid Redirect URIs: https://headlamp.YOUR-DOMAIN.com/*
+   Web Origins: https://headlamp.YOUR-DOMAIN.com
+   ```
+3. Save the client secret from the Credentials tab
 
-3. **Commit and push** changes to trigger Flux reconciliation
+#### Step 2: Create the OIDC Secret
 
-### Manual Deployment
+Create the OIDC configuration secret using one of these methods:
+
+**Option A: Direct Secret Creation (Development)**
+```bash
+# Create the secret directly
+kubectl create secret generic headlamp-oidc-config \
+  --namespace kube-system \
+  --from-literal=clientID="your-client-id" \
+  --from-literal=clientSecret="your-client-secret" \
+  --from-literal=issuerURL="https://your-keycloak.com/realms/your-realm" \
+  --from-literal=scopes="openid profile email groups" \
+  --from-literal=callbackURL="https://headlamp.YOUR-DOMAIN.com/oidc-callback"
+```
+
+**Option B: Using Sealed Secrets (Production - Recommended)**
+```bash
+# 1. Copy and edit the secret template
+cp applications/base/services/headlamp/oidc-secret-template.yaml /tmp/headlamp-oidc.yaml
+
+# 2. Edit the secret with your values
+nano /tmp/headlamp-oidc.yaml
+
+# 3. Create and seal the secret
+kubectl create secret generic headlamp-oidc-config \
+  --namespace kube-system \
+  --from-literal=clientID="your-client-id" \
+  --from-literal=clientSecret="your-client-secret" \
+  --from-literal=issuerURL="https://your-keycloak.com/realms/your-realm" \
+  --from-literal=scopes="openid profile email groups" \
+  --from-literal=callbackURL="https://headlamp.YOUR-DOMAIN.com/oidc-callback" \
+  --dry-run=client -o yaml | \
+kubeseal -o yaml > applications/base/services/headlamp/sealed-oidc-secret.yaml
+
+# 4. Commit the sealed secret to Git
+git add applications/base/services/headlamp/sealed-oidc-secret.yaml
+git commit -m "Add headlamp OIDC sealed secret"
+```
+
+#### Step 3: Configure Your Domain
+
+Update the domain configuration in the hardened values:
 
 ```bash
+# Edit the hardened values file
+nano applications/base/services/headlamp/helm-values/hardened-values-0.24.0.yaml
+
+# Replace all instances of "headlamp.example.com" with your actual domain
+# For example: "headlamp.cluster1.yourcompany.com"
+```
+
+**Required Changes:**
+```yaml
+ingress:
+  hosts:
+    - host: headlamp.YOUR-DOMAIN.com  # Update this
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: headlamp-tls
+      hosts:
+        - headlamp.YOUR-DOMAIN.com    # Update this too
+```
+
+#### Step 4: Add to Your Cluster Configuration
+
+Include headlamp in your cluster's kustomization:
+
+```bash
+# Edit your cluster overlay
+nano applications/overlays/YOUR-CLUSTER/kustomization.yaml
+
+# Add headlamp to the resources list:
+resources:
+  - ../../base/services/cert-manager
+  - ../../base/services/ingress-nginx
+  - ../../base/services/headlamp        # Add this line
+  # ... other services
+```
+
+#### Step 5: Deploy via GitOps
+
+Commit and deploy your changes:
+
+```bash
+# Add all changes
+git add applications/base/services/headlamp/
+git add applications/overlays/YOUR-CLUSTER/kustomization.yaml
+
+# Commit changes
+git commit -m "Add headlamp with OIDC configuration"
+
+# Push to trigger Flux reconciliation
+git push origin main
+```
+
+#### Step 6: Monitor Deployment
+
+Watch the deployment progress:
+
+```bash
+# Monitor Flux reconciliation
+flux get helmreleases -n kube-system
+
+# Check headlamp pod status
+kubectl get pods -n kube-system -l app.kubernetes.io/name=headlamp
+
+# View deployment logs
+kubectl logs -n kube-system deployment/headlamp -f
+
+# Check ingress status
+kubectl get ingress headlamp -n kube-system
+```
+
+#### Step 7: Verify TLS Certificate
+
+Ensure cert-manager creates the TLS certificate:
+
+```bash
+# Check certificate status
+kubectl get certificate headlamp-tls -n kube-system
+
+# If certificate is not ready, check cert-manager logs
+kubectl logs -n cert-manager deployment/cert-manager -f
+```
+
+#### Step 8: Test Access
+
+1. Navigate to `https://headlamp.YOUR-DOMAIN.com`
+2. Click "Sign in with OIDC"
+3. Complete the OIDC authentication flow
+4. Verify you can access the Kubernetes dashboard
+
+### Alternative Deployment Methods
+
+#### Using Flux CD (Recommended)
+
+The GitOps approach above is the recommended method for production deployments.
+
+#### Manual Deployment (Development/Testing)
+
+For development or testing purposes, you can deploy manually:
+
+```bash
+# Ensure secret exists first
+kubectl get secret headlamp-oidc-config -n kube-system
+
 # Deploy using kubectl
 kubectl kustomize applications/base/services/headlamp | kubectl apply -f -
 
@@ -163,6 +316,171 @@ kubectl kustomize applications/base/services/headlamp | kubectl apply -f -
 kubectl get pods -n kube-system -l app.kubernetes.io/name=headlamp
 kubectl get helmrelease headlamp -n kube-system
 ```
+
+### Post-Deployment Configuration
+
+#### Configure RBAC for Users
+
+Set up appropriate permissions for your OIDC users:
+
+```bash
+# Create a ClusterRoleBinding for developers (read-only access)
+kubectl apply -f - << EOF
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: headlamp-developers
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+- kind: User
+  name: "developer@yourcompany.com"
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: "developers"
+  apiGroup: rbac.authorization.k8s.io
+EOF
+
+# Create admin access for administrators
+kubectl apply -f - << EOF
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: headlamp-admins
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: Group
+  name: "cluster-admins"
+  apiGroup: rbac.authorization.k8s.io
+EOF
+```
+
+#### Set Up Monitoring Alerts
+
+Configure alerts for headlamp availability:
+
+```bash
+# Example PrometheusRule for headlamp monitoring
+kubectl apply -f - << EOF
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: headlamp-alerts
+  namespace: kube-system
+spec:
+  groups:
+  - name: headlamp
+    rules:
+    - alert: HeadlampDown
+      expr: up{job="headlamp"} == 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Headlamp is down"
+        description: "Headlamp has been down for more than 5 minutes"
+    - alert: HeadlampHighMemoryUsage
+      expr: container_memory_usage_bytes{pod=~"headlamp-.*"} / container_spec_memory_limit_bytes > 0.8
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Headlamp high memory usage"
+        description: "Headlamp memory usage is above 80%"
+EOF
+```
+
+### Validation Checklist
+
+After deployment, verify the following:
+
+- [ ] **Secret Created**: `kubectl get secret headlamp-oidc-config -n kube-system`
+- [ ] **Pods Running**: `kubectl get pods -n kube-system -l app.kubernetes.io/name=headlamp`
+- [ ] **Service Available**: `kubectl get service headlamp -n kube-system`
+- [ ] **Ingress Configured**: `kubectl get ingress headlamp -n kube-system`
+- [ ] **Certificate Ready**: `kubectl get certificate headlamp-tls -n kube-system`
+- [ ] **HelmRelease Deployed**: `kubectl get helmrelease headlamp -n kube-system`
+- [ ] **Web Interface Accessible**: Navigate to your domain
+- [ ] **OIDC Authentication Working**: Test login flow
+- [ ] **Kubernetes API Access**: Verify dashboard shows cluster resources
+- [ ] **RBAC Enforced**: Confirm users see appropriate resources
+
+### Environment-Specific Configurations
+
+#### Development Environment
+
+For development environments, you might want to:
+
+```yaml
+# Add to your dev overlay
+# applications/overlays/dev/headlamp-dev-values.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: headlamp-values-override
+  namespace: kube-system
+type: Opaque
+stringData:
+  override.yaml: |
+    replicaCount: 1
+    ingress:
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-staging"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+```
+
+#### Production Environment
+
+For production environments:
+
+```yaml
+# Add to your prod overlay
+# applications/overlays/prod/headlamp-prod-values.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: headlamp-values-override
+  namespace: kube-system
+type: Opaque
+stringData:
+  override.yaml: |
+    replicaCount: 3
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+    podDisruptionBudget:
+      minAvailable: 2
+```
+
+### Rollback Procedure
+
+If you need to rollback the deployment:
+
+```bash
+# Check Helm release history
+helm history headlamp -n kube-system
+
+# Rollback to previous version
+helm rollback headlamp -n kube-system
+
+# Or use Flux to rollback via Git
+git revert <commit-hash>
+git push origin main
+```
+
+This completes the deployment process for headlamp with OIDC authentication in your openCenter GitOps environment.
 
 ## Access and Usage
 

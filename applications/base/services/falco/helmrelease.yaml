@@ -2,10 +2,10 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: headlamp
-  namespace: kube-system
+  name: falco
+  namespace: falco
 spec:
-  releaseName: headlamp
+  releaseName: falco
   interval: 5m
   timeout: 10m
   driftDetection:
@@ -18,20 +18,20 @@ spec:
     remediation:
       retries: 0
       remediateLastFailure: false
-  targetNamespace: kube-system
+  targetNamespace: falco
   chart:
     spec:
-      chart: headlamp
-      version: 0.35.0
+      chart: falco
+      version: 6.2.5
       sourceRef:
         kind: HelmRepository
-        name: headlamp
-        namespace: kube-system
+        name: charts
+        namespace: falco
   valuesFrom:
     - kind: Secret
-      name: headlamp-values-base
+      name: falco-values-base
       valuesKey: hardened.yaml
     - kind: Secret
-      name: headlamp-values-override
+      name: falco-values-override
       valuesKey: override.yaml
       optional: true

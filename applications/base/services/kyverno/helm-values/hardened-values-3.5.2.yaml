@@ -1,0 +1,581 @@
+# Hardened values for kyverno v3.5.2
+# Policy engine for Kubernetes with OIDC integration
+
+# Global Configuration
+global:
+  resyncPeriod: 15m
+  crdWatcher: false
+
+# Features Configuration - Latest recommended settings
+features:
+  admissionReports:
+    enabled: true
+  aggregateReports:
+    enabled: true
+  policyReports:
+    enabled: true
+  validatingAdmissionPolicyReports:
+    enabled: true
+  mutatingAdmissionPolicyReports:
+    enabled: false
+  reporting:
+    validate: true
+    mutate: true
+    mutateExisting: true
+    imageVerify: true
+    generate: true
+  autoUpdateWebhooks:
+    enabled: true
+  backgroundScan:
+    enabled: true
+    backgroundScanWorkers: 2
+    backgroundScanInterval: 1h
+    skipResourceFilters: true
+  configMapCaching:
+    enabled: true
+  controllerRuntimeMetrics:
+    bindAddress: ":8080"
+  deferredLoading:
+    enabled: true
+  dumpPayload:
+    enabled: false
+  forceFailurePolicyIgnore:
+    enabled: false
+  generateValidatingAdmissionPolicy:
+    enabled: true
+  generateMutatingAdmissionPolicy:
+    enabled: false
+  dumpPatches:
+    enabled: false
+  globalContext:
+    maxApiCallResponseLength: 2000000
+  logging:
+    format: json
+    verbosity: 2
+  omitEvents:
+    eventTypes:
+      - PolicyApplied
+      - PolicySkipped
+  policyExceptions:
+    enabled: true
+    namespace: ''
+  protectManagedResources:
+    enabled: false
+  registryClient:
+    allowInsecure: false
+    credentialHelpers:
+      - default
+      - google
+      - amazon
+      - azure
+      - github
+  ttlController:
+    reconciliationInterval: 1m
+  tuf:
+    enabled: false
+
+# Configuration
+config:
+  create: true
+  preserve: true
+  enableDefaultRegistryMutation: true
+  defaultRegistry: docker.io
+  excludeGroups:
+    - system:nodes
+  excludeUsernames: []
+  excludeRoles: []
+  excludeClusterRoles: []
+  generateSuccessEvents: false
+  updateRequestThreshold: 1000
+  webhooks:
+    namespaceSelector:
+      matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: NotIn
+        values:
+          - kube-system
+          - kube-public
+          - kube-node-lease
+          - kyverno
+          - flux-system
+          - cert-manager
+          - ingress-nginx
+          - observability
+  webhookAnnotations:
+    'admissions.enforcer/disabled': 'true'
+  excludeKyvernoNamespace: true
+  resourceFiltersExcludeNamespaces: []
+  resourceFiltersExclude: []
+  resourceFiltersIncludeNamespaces: []
+  resourceFiltersInclude: []
+
+# Metrics Configuration
+metricsConfig:
+  create: true
+  namespaces:
+    include: []
+    exclude: []
+  bucketBoundaries: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 15, 20, 25, 30]
+  metricsExposure:
+    kyverno_policy_execution_duration_seconds:
+      disabledLabelDimensions: ["resource_namespace", "resource_request_operation"]
+    kyverno_admission_review_duration_seconds:
+      disabledLabelDimensions: ["resource_namespace"]
+    kyverno_policy_rule_info_total:
+      disabledLabelDimensions: ["resource_namespace", "policy_namespace"]
+    kyverno_policy_results_total:
+      disabledLabelDimensions: ["resource_namespace", "policy_namespace"]
+    kyverno_admission_requests_total:
+      disabledLabelDimensions: ["resource_namespace"]
+    kyverno_cleanup_controller_deletedobjects_total:
+      disabledLabelDimensions: ["resource_namespace", "policy_namespace"]
+
+# Admission Controller Configuration
+admissionController:
+  autoscaling:
+    enabled: false
+
+  featuresOverride:
+    admissionReports:
+      backPressureThreshold: 1000
+
+  rbac:
+    create: true
+    createViewRoleBinding: true
+    viewRoleName: view
+    serviceAccount:
+      name: ""
+      annotations: {}
+      automountServiceAccountToken: true
+
+  replicas: 3
+
+  # Security contexts
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+
+  container:
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      runAsUser: 10001
+      runAsGroup: 10001
+      seccompProfile:
+        type: RuntimeDefault
+
+  # Resource management
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+  # Node scheduling
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # Pod disruption budget
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+
+  # Service Monitor for Prometheus
+  serviceMonitor:
+    enabled: true
+    namespace: kyverno
+    labels:
+      app: kyverno
+    interval: 30s
+
+  # Network Policy
+  networkPolicy:
+    enabled: true
+    policyTypes:
+      - Ingress
+      - Egress
+    ingress:
+      # Allow webhook traffic from API server
+      - from: []
+        ports:
+          - protocol: TCP
+            port: 9443
+      # Allow Prometheus scraping
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                name: observability
+        ports:
+          - protocol: TCP
+            port: 8080
+    egress:
+      # Allow DNS resolution
+      - to: []
+        ports:
+          - protocol: UDP
+            port: 53
+          - protocol: TCP
+            port: 53
+      # Allow Kubernetes API access
+      - to: []
+        ports:
+          - protocol: TCP
+            port: 443
+
+  # Affinity configuration for better distribution
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                  - admission-controller
+          topologyKey: kubernetes.io/hostname
+
+# Background Controller Configuration
+backgroundController:
+  rbac:
+    create: true
+    serviceAccount:
+      name: ""
+      annotations: {}
+      automountServiceAccountToken: true
+
+  replicas: 2
+
+  # Security contexts
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+
+  container:
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      runAsUser: 10001
+      runAsGroup: 10001
+      seccompProfile:
+        type: RuntimeDefault
+
+  # Resource management
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Node scheduling
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # Service Monitor for Prometheus
+  serviceMonitor:
+    enabled: true
+    namespace: kyverno
+    labels:
+      app: kyverno
+    interval: 30s
+
+  # Network Policy
+  networkPolicy:
+    enabled: true
+    policyTypes:
+      - Ingress
+      - Egress
+    ingress:
+      # Allow Prometheus scraping
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                name: observability
+        ports:
+          - protocol: TCP
+            port: 8080
+    egress:
+      # Allow DNS resolution
+      - to: []
+        ports:
+          - protocol: UDP
+            port: 53
+          - protocol: TCP
+            port: 53
+      # Allow Kubernetes API access
+      - to: []
+        ports:
+          - protocol: TCP
+            port: 443
+
+# Cleanup Controller Configuration
+cleanupController:
+  rbac:
+    create: true
+    serviceAccount:
+      name: ""
+      annotations: {}
+      automountServiceAccountToken: true
+
+  replicas: 2
+
+  # Security contexts
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+
+  container:
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      runAsUser: 10001
+      runAsGroup: 10001
+      seccompProfile:
+        type: RuntimeDefault
+
+  # Resource management
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Node scheduling
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # Service Monitor for Prometheus
+  serviceMonitor:
+    enabled: true
+    namespace: kyverno
+    labels:
+      app: kyverno
+    interval: 30s
+
+  # Network Policy
+  networkPolicy:
+    enabled: true
+    policyTypes:
+      - Ingress
+      - Egress
+    ingress:
+      # Allow webhook traffic from API server
+      - from: []
+        ports:
+          - protocol: TCP
+            port: 9443
+      # Allow Prometheus scraping
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                name: observability
+        ports:
+          - protocol: TCP
+            port: 8080
+    egress:
+      # Allow DNS resolution
+      - to: []
+        ports:
+          - protocol: UDP
+            port: 53
+          - protocol: TCP
+            port: 53
+      # Allow Kubernetes API access
+      - to: []
+        ports:
+          - protocol: TCP
+            port: 443
+
+# Reports Controller Configuration
+reportsController:
+  rbac:
+    create: true
+    serviceAccount:
+      name: ""
+      annotations: {}
+      automountServiceAccountToken: true
+
+  replicas: 2
+
+  # Security contexts
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+
+  container:
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      runAsUser: 10001
+      runAsGroup: 10001
+      seccompProfile:
+        type: RuntimeDefault
+
+  # Resource management
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Node scheduling
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # Service Monitor for Prometheus
+  serviceMonitor:
+    enabled: true
+    namespace: kyverno
+    labels:
+      app: kyverno
+    interval: 30s
+
+  # Network Policy
+  networkPolicy:
+    enabled: true
+    policyTypes:
+      - Ingress
+      - Egress
+    ingress:
+      # Allow Prometheus scraping
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                name: observability
+        ports:
+          - protocol: TCP
+            port: 8080
+    egress:
+      # Allow DNS resolution
+      - to: []
+        ports:
+          - protocol: UDP
+            port: 53
+          - protocol: TCP
+            port: 53
+      # Allow Kubernetes API access
+      - to: []
+        ports:
+          - protocol: TCP
+            port: 443
+
+# Grafana Dashboard Integration
+grafana:
+  enabled: true
+  namespace: observability
+  configMapName: kyverno-grafana
+  annotations: {}
+  labels:
+    grafana_dashboard: "1"
+  grafanaDashboard:
+    create: false
+    folder: kyverno
+    allowCrossNamespaceImport: true
+    matchLabels:
+      dashboards: "grafana"
+
+# Webhooks Cleanup
+webhooksCleanup:
+  enabled: true
+  autoDeleteWebhooks:
+    enabled: false
+
+  image:
+    registry: registry.k8s.io
+    repository: kubectl
+    tag: 'v1.32.7'
+
+  securityContext:
+    runAsUser: 65534
+    runAsGroup: 65534
+    runAsNonRoot: true
+    privileged: false
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+  serviceAccount:
+    automountServiceAccountToken: true
+
+# Test Configuration
+test:
+  sleep: 20
+
+  image:
+    repository: busybox
+    tag: '1.35'
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+  securityContext:
+    runAsUser: 65534
+    runAsGroup: 65534
+    runAsNonRoot: true
+    privileged: false
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+
+  automountServiceAccountToken: true

@@ -1,0 +1,272 @@
+# Hardened values for headlamp v0.35.0
+# Kubernetes Dashboard with OIDC Authentication
+
+# High availability configuration
+replicaCount: 2
+
+# Image configuration
+image:
+  registry: ghcr.io
+  repository: headlamp-k8s/headlamp
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Init containers
+initContainers: []
+
+# Configuration
+config:
+  inCluster: true
+  baseURL: ""
+
+  # OIDC Configuration - Use external secret approach for security
+  oidc:
+    secret:
+      # Don't create secret automatically - use external secret
+      create: false
+      name: oidc
+
+    # External secret configuration (managed separately)
+    externalSecret:
+      enabled: true
+      name: headlamp-oidc-config
+
+    # OIDC settings - these will be overridden by external secret
+    clientID: ""
+    clientSecret: ""
+    issuerURL: ""
+    scopes: "openid,profile,email,groups"
+    callbackURL: ""
+    validatorClientID: ""
+    validatorIssuerURL: ""
+    useAccessToken: false  # Use ID token for better security
+
+  # Plugin configuration
+  pluginsDir: "/headlamp/plugins"
+  watchPlugins: false
+  extraArgs: []
+
+# Environment variables
+env: []
+
+# Service account configuration
+automountServiceAccountToken: true
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Cluster role binding
+clusterRoleBinding:
+  create: true
+  clusterRoleName: cluster-admin
+  annotations: {}
+
+# Deployment annotations
+deploymentAnnotations: {}
+
+# Pod annotations
+podAnnotations: {}
+
+# Security contexts - Enhanced for production
+podSecurityContext:
+  fsGroup: 65534
+  runAsGroup: 65534
+  runAsUser: 65534
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  privileged: false
+  runAsUser: 100
+  runAsGroup: 101
+  seccompProfile:
+    type: RuntimeDefault
+
+# Service configuration
+service:
+  annotations: {}
+  type: ClusterIP
+  port: 80
+  clusterIP: ""
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  nodePort: null
+
+# Volume mounts and volumes
+volumeMounts: []
+volumes: []
+
+# Persistent Volume Claim
+persistentVolumeClaim:
+  enabled: false
+  annotations: {}
+  accessModes: []
+  size: ""
+  storageClassName: ""
+  selector: {}
+  volumeMode: ""
+
+# Ingress configuration for OIDC callback
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # Enhanced security headers for OIDC
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains";
+      more_set_headers "Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';";
+  labels: {}
+  ingressClassName: "nginx"
+  hosts:
+    - host: headlamp.example.com  # Replace with your actual domain
+      paths:
+        - path: /
+          type: Prefix
+  tls:
+    - secretName: headlamp-tls
+      hosts:
+        - headlamp.example.com
+
+# Resource management
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Node scheduling
+nodeSelector:
+  kubernetes.io/os: linux
+
+# Tolerations
+tolerations: []
+
+# Affinity for better distribution
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - headlamp
+          topologyKey: kubernetes.io/hostname
+
+# Plugin Manager Configuration
+pluginsManager:
+  enabled: false
+  configFile: "plugin.yml"
+  configContent: ""
+  baseImage: node:lts-alpine
+  version: latest
+  # resources:
+  #   requests:
+  #     cpu: "500m"
+  #     memory: "2048Mi"
+  #   limits:
+  #     cpu: "1000m"
+  #     memory: "4096Mi"
+
+# Extra manifests for additional security configurations
+extraManifests:
+  # Network Policy for enhanced security
+  - |
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: headlamp-network-policy
+      namespace: kube-system
+    spec:
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: headlamp
+      policyTypes:
+        - Ingress
+        - Egress
+      ingress:
+        # Allow ingress from nginx ingress controller
+        - from:
+            - namespaceSelector:
+                matchLabels:
+                  name: ingress-nginx
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ingress-nginx
+          ports:
+            - protocol: TCP
+              port: 4466
+      egress:
+        # Allow DNS resolution
+        - to: []
+          ports:
+            - protocol: UDP
+              port: 53
+            - protocol: TCP
+              port: 53
+        # Allow HTTPS to OIDC provider
+        - to: []
+          ports:
+            - protocol: TCP
+              port: 443
+        # Allow Kubernetes API access
+        - to: []
+          ports:
+            - protocol: TCP
+              port: 6443
+            - protocol: TCP
+              port: 443
+
+  # Pod Disruption Budget for high availability
+  - |
+    apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      name: headlamp-pdb
+      namespace: kube-system
+    spec:
+      minAvailable: 1
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: headlamp
+
+  # ServiceMonitor for Prometheus monitoring
+  - |
+    apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    metadata:
+      name: headlamp-metrics
+      namespace: kube-system
+      labels:
+        app: headlamp
+    spec:
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: headlamp
+      endpoints:
+        - port: http
+          interval: 30s
+          path: /metrics

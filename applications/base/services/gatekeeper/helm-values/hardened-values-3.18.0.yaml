@@ -1,0 +1,260 @@
+# Hardened values for gatekeeper v3.18.0
+# Open Policy Agent Gatekeeper for admission control and compliance
+
+# Controller Manager Configuration
+controllerManager:
+  replicas: 3
+
+  # Security contexts
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    fsGroup: 65532
+    seccompProfile:
+      type: RuntimeDefault
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+
+  # Resource management
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+  # Node scheduling
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # Pod disruption budget
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+
+# Audit Configuration
+audit:
+  replicas: 2
+
+  # Security contexts
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    fsGroup: 65532
+    seccompProfile:
+      type: RuntimeDefault
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+
+  # Resource management
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Node scheduling
+  nodeSelector:
+    kubernetes.io/os: linux
+
+# Webhook Configuration
+webhook:
+  replicas: 3
+
+  # Security contexts
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    fsGroup: 65532
+    seccompProfile:
+      type: RuntimeDefault
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+
+  # Resource management
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+  # Node scheduling
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # Webhook failure policy
+  failurePolicy: Fail
+
+  # Webhook timeout
+  timeoutSeconds: 10
+
+# Global Configuration
+image:
+  repository: openpolicyagent/gatekeeper
+  pullPolicy: IfNotPresent
+
+# Excluded namespaces from Gatekeeper enforcement
+excludedNamespaces:
+  - gatekeeper-system
+  - kube-system
+  - kube-public
+  - kube-node-lease
+  - flux-system
+  - cert-manager
+  - ingress-nginx
+  - observability
+  - rbac-system
+  - kyverno
+
+# Monitoring and metrics
+metrics:
+  enabled: true
+  # Prometheus service monitor
+  serviceMonitor:
+    enabled: true
+    namespace: gatekeeper-system
+    labels:
+      app: gatekeeper
+    interval: 30s
+
+# Violations logging
+violations:
+  # Enable violation logging
+  allowedUsers: []
+  # Log level for violations
+  logLevel: INFO
+
+# Constraint evaluation
+constraintEvaluationEnabled: true
+
+# Mutation webhook
+mutations:
+  enabled: true
+  replicas: 2
+
+  # Security contexts for mutation webhook
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    fsGroup: 65532
+    seccompProfile:
+      type: RuntimeDefault
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+
+  # Resource management
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# External data provider
+enableExternalData: true
+
+# OIDC Integration for policy context
+oidc:
+  enabled: true
+  # Extract user info from admission requests
+  userInfoEnabled: true
+  # Claims to extract from OIDC tokens
+  userClaim: "preferred_username"
+  groupsClaim: "groups"
+
+# Network policies
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow webhook traffic from API server
+    - from: []
+      ports:
+        - protocol: TCP
+          port: 8443
+    # Allow Prometheus scraping
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: observability
+      ports:
+        - protocol: TCP
+          port: 8888
+  egress:
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow Kubernetes API access
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+
+# Affinity configuration
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - gatekeeper-controller-manager
+                  - gatekeeper-audit
+                  - gatekeeper-webhook
+          topologyKey: kubernetes.io/hostname
+
+# Logging configuration
+logLevel: INFO
+logDenies: true
+logMutations: true
+
+# Enable experimental features
+experimentalEnableMutation: true
+
+# Upgrade CRDs automatically
+upgradeCRDs:
+  enabled: true
+  extraRules: []
+
+# Validating admission policy support
+validatingAdmissionPolicies:
+  enabled: true

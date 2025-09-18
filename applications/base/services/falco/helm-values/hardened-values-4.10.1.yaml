@@ -1,0 +1,276 @@
+# Hardened values for falco v4.10.1
+# Runtime security monitoring and threat detection
+
+# Driver configuration
+driver:
+  # Use modern eBPF driver for better performance and security
+  kind: modern_ebpf
+  # Enable driver loader
+  loader:
+    enabled: true
+
+# Falco configuration
+falco:
+  # Rules configuration
+  rules_file:
+    - /etc/falco/falco_rules.yaml
+    - /etc/falco/falco_rules.local.yaml
+    - /etc/falco/k8s_audit_rules.yaml
+    - /etc/falco/rules.d
+
+  # Syscall event drops
+  syscall_event_drops:
+    actions:
+      - log
+      - alert
+    rate: 0.03333
+    max_burst: 1000
+
+  # Output channels
+  outputs:
+    rate: 1
+    max_burst: 1000
+
+  # Buffered outputs
+  buffered_outputs: false
+
+  # OIDC integration for user context
+  oidc:
+    enabled: true
+    # Add user context to alerts
+    enrich_with_user_data: true
+
+# Security contexts
+securityContext:
+  # Falco needs privileged access for syscall monitoring
+  privileged: true
+  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: true
+
+# Resource management
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# Node scheduling - deploy on all nodes
+nodeSelector:
+  kubernetes.io/os: linux
+
+# Tolerations to run on all nodes including masters
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
+  - effect: NoExecute
+    operator: Exists
+
+# DaemonSet configuration for node coverage
+daemonset:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+
+# Service Monitor for Prometheus
+serviceMonitor:
+  enabled: true
+  namespace: falco
+  labels:
+    app: falco
+  interval: 30s
+
+# Metrics configuration
+metrics:
+  enabled: true
+  interval: 30s
+  # Enable rule metrics
+  rules_metrics_enabled: true
+  # Enable resource utilization metrics
+  resource_utilization_enabled: true
+  # Enable state metrics
+  state_metrics_enabled: true
+  # Enable kernel tracing metrics
+  kernel_tracing_enabled: true
+  # Enable libbpf stats
+  libbpf_stats_enabled: true
+  # Convert to prometheus format
+  convert_memory_to_mb: true
+  # Include hostname in metrics
+  include_empty_values: false
+
+# gRPC configuration
+grpc:
+  enabled: true
+  bind_address: "0.0.0.0:5060"
+  # Enable mutual TLS
+  threadiness: 8
+
+# gRPC output
+grpcOutput:
+  enabled: true
+
+# HTTP output for webhooks
+httpOutput:
+  enabled: true
+  url: "http://falco-exporter:9376/api/v1/alerts"
+
+# Stdout output
+stdoutOutput:
+  enabled: true
+
+# Priority for different rule types
+priority: debug
+
+# Monitoring rules specific to OIDC and RBAC
+customRules:
+  rules.yaml: |
+    # OIDC Authentication monitoring
+    - rule: OIDC Authentication Failure
+      desc: Detect failed OIDC authentication attempts
+      condition: >
+        k8s_audit and ka.verb=create and
+        ka.target.resource=tokenreviews and
+        ka.response_code>=400
+      output: >
+        OIDC authentication failed
+        (user=%ka.user.name verb=%ka.verb uri=%ka.uri.param
+        resp=%ka.response_code reason=%ka.response_reason)
+      priority: WARNING
+      tags: [oidc, authentication, security]
+
+    # RBAC Violations
+    - rule: RBAC Permission Denied
+      desc: Detect RBAC permission denied events
+      condition: >
+        k8s_audit and ka.response_code=403
+      output: >
+        RBAC permission denied
+        (user=%ka.user.name verb=%ka.verb resource=%ka.target.resource
+        namespace=%ka.target.namespace reason=%ka.response_reason)
+      priority: WARNING
+      tags: [rbac, authorization, security]
+
+    # Privileged Container Detection
+    - rule: Privileged Container Started
+      desc: Detect when privileged containers are started
+      condition: >
+        spawned_process and container and proc.name != "falco"
+        and k8s.pod.privileged=true
+      output: >
+        Privileged container started
+        (user=%ka.user.name command=%proc.cmdline
+        container=%container.name pod=%k8s.pod.name)
+      priority: WARNING
+      tags: [container, privilege, security]
+
+    # Suspicious Network Activity
+    - rule: Outbound Connection to Suspicious Domain
+      desc: Detect outbound connections to potentially malicious domains
+      condition: >
+        outbound and fd.snet exists and
+        (fd.snet contains ".onion" or
+         fd.snet contains "pastebin" or
+         fd.snet contains "bit.ly")
+      output: >
+        Outbound connection to suspicious domain
+        (command=%proc.cmdline connection=%fd.name
+        container=%container.name pod=%k8s.pod.name)
+      priority: WARNING
+      tags: [network, suspicious, security]
+
+# Falco Exporter for metrics
+falcoExporter:
+  enabled: true
+  image:
+    repository: falcosecurity/falco-exporter
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 9376
+    targetPort: 9376
+    labels:
+      app: falco-exporter
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    runAsGroup: 65534
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+# Network policies
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow Prometheus scraping
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: observability
+      ports:
+        - protocol: TCP
+          port: 8765
+        - protocol: TCP
+          port: 9376
+    # Allow gRPC connections
+    - from: []
+      ports:
+        - protocol: TCP
+          port: 5060
+  egress:
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow webhook calls
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 9376
+
+# Enable audit log monitoring
+auditLog:
+  enabled: true
+  # Dynamically configure audit webhook
+  dynamicBackend:
+    enabled: true
+    # URL for audit webhook
+    url: "http://falco.falco.svc.cluster.local:8765/k8s_audit"
+
+# Enable gRPC for external integrations
+gRPC:
+  enabled: true
+  listenPort: 5060
+
+# Logging configuration
+log_stderr: true
+log_syslog: false
+log_level: info
+
+# File output for persistent logging
+file_output:
+  enabled: true
+  keep_alive: false
+  filename: /var/log/falco_events.txt

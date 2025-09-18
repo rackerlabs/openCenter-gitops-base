@@ -4,8 +4,8 @@ kind: Kustomization
 resources: [./namespace.yaml, ./source.yaml, ./helmrelease.yaml]
 
 secretGenerator:
-  - name: headlamp-values-base
+  - name: kyverno-values-base
     type: Opaque
-    files: [hardened.yaml=helm-values/hardened-values-0.35.0.yaml]
+    files: [hardened.yaml=helm-values/hardened-values-3.5.2.yaml]
     options:
       disableNameSuffixHash: true

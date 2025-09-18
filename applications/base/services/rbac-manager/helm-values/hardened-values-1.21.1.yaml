@@ -1,0 +1,128 @@
+# Hardened values for rbac-manager v1.21.1 (app version v1.9.2)
+# RBAC Manager for automated RBAC management
+# Based on official Fairwinds chart values and documentation
+
+# Image configuration
+image:
+  repository: quay.io/reactiveops/rbac-manager
+  tag: v1.9.2
+  digest: ""
+  pullPolicy: Always
+  imagePullSecrets: []
+
+# Install CRDs
+installCRDs: true
+
+# CRD configuration
+crds:
+  additionalLabels:
+    app.kubernetes.io/component: rbac-manager
+    app.kubernetes.io/part-of: openCenter
+
+# RBAC configuration
+rbac:
+  additionalLabels:
+    app.kubernetes.io/component: rbac-manager
+    app.kubernetes.io/part-of: openCenter
+
+# Resource management - aligned with official defaults but with hardened limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 200m  # Increased from default 100m for better performance
+    memory: 256Mi  # Increased from default 128Mi for stability
+
+# Priority class for system-critical workload
+priorityClassName: "system-cluster-critical"
+
+# Node scheduling
+nodeSelector:
+  kubernetes.io/os: linux
+
+# Tolerations for system nodes
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: NoSchedule
+
+# Affinity for better distribution
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - rbac-manager
+          topologyKey: kubernetes.io/hostname
+
+# Pod annotations for enhanced monitoring
+podAnnotations:
+  cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/metrics"
+
+# Pod labels
+podLabels:
+  app.kubernetes.io/component: rbac-manager
+  app.kubernetes.io/part-of: openCenter
+
+# Pod security context - enhanced security
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  fsGroup: 65534
+  seccompProfile:
+    type: RuntimeDefault
+
+# Container security context - official recommendations with enhancements
+securityContext:
+  allowPrivilegeEscalation: false
+  privileged: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  capabilities:
+    drop:
+      - ALL
+
+# Deployment labels
+deploymentLabels:
+  app.kubernetes.io/component: rbac-manager
+  app.kubernetes.io/part-of: openCenter
+
+# Service Monitor for Prometheus - enabled with proper configuration
+serviceMonitor:
+  enabled: true
+  additionalLabels:
+    app.kubernetes.io/component: rbac-manager
+    app.kubernetes.io/part-of: openCenter
+  annotations:
+    prometheus.io/scrape: "true"
+  namespace: rbac-system
+  interval: 30s
+  relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: pod
+    - sourceLabels: [__meta_kubernetes_namespace]
+      targetLabel: namespace
+
+# Extra arguments for enhanced functionality
+extraArgs:
+  # Enable metrics endpoint
+  metrics-addr: "0.0.0.0:8080"
+  # Set log level
+  v: "2"
+  # Enable leader election for HA
+  leader-elect: "true"
+  # Set reconcile period
+  sync-period: "30s"

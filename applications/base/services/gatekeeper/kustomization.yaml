@@ -4,8 +4,8 @@ kind: Kustomization
 resources: [./namespace.yaml, ./source.yaml, ./helmrelease.yaml]
 
 secretGenerator:
-  - name: headlamp-values-base
+  - name: gatekeeper-values-base
     type: Opaque
-    files: [hardened.yaml=helm-values/hardened-values-0.35.0.yaml]
+    files: [hardened.yaml=helm-values/hardened-values-3.20.1.yaml]
     options:
       disableNameSuffixHash: true
