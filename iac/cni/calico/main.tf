@@ -15,5 +15,6 @@ resource "local_file" "calico_values" {
   })
 
   filename = "${path.root}/../../../applications/overlays/${var.cluster_name}/services/calico/helm-values/override_values.yaml"
+  file_permission = 0644
 
 }
