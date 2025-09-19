@@ -31,8 +31,8 @@ resources:
     cpu: 100m
     memory: 128Mi
   limits:
-    cpu: 200m  # Increased from default 100m for better performance
-    memory: 256Mi  # Increased from default 128Mi for stability
+    cpu: 200m # Increased from default 100m for better performance
+    memory: 256Mi # Increased from default 128Mi for stability
 
 # Priority class for system-critical workload
 priorityClassName: "system-cluster-critical"
@@ -119,10 +119,10 @@ serviceMonitor:
 # Extra arguments for enhanced functionality
 extraArgs:
   # Enable metrics endpoint
-  metrics-addr: "0.0.0.0:8080"
+  metrics-address: "0.0.0.0:8042"
   # Set log level
   v: "2"
   # Enable leader election for HA
-  leader-elect: "true"
+  # leader-elect: "true"
   # Set reconcile period
-  sync-period: "30s"
+  # sync-period: "30s"
