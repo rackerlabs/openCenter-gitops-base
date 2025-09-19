@@ -23,7 +23,7 @@ resource "local_file" "ansible_inventory" {
   })
 
   filename   = "./inventory/inventory.yaml"
-  file_permission = 0644
+  file_permission = "0644"
   depends_on = [var.master_nodes, var.worker_nodes]
   #   lifecycle {
   #     replace_triggered_by = [var.master_nodes, var.worker_nodes]
@@ -54,7 +54,7 @@ resource "local_file" "k8s_cluster" {
   })
 
   filename   = "./inventory/group_vars/k8s_cluster/k8s-cluster.yml"
-  file_permission = 0644
+  file_permission = "0644"
   depends_on = [local_file.ansible_inventory]
 }
 
@@ -71,7 +71,7 @@ resource "local_file" "addons" {
   })
 
   filename   = "./inventory/group_vars/k8s_cluster/addons.yml"
-  file_permission = 0644
+  file_permission = "0644"
   depends_on = [local_file.ansible_inventory]
 }
 
@@ -92,7 +92,7 @@ resource "local_file" "k8s_hardening" {
   })
 
   filename   = "./inventory/k8s_hardening.yml"
-  file_permission = 0644
+  file_permission = "0644"
   depends_on = [local_file.ansible_inventory]
 }
 
@@ -214,7 +214,7 @@ resource "local_file" "os_hardening_playbook" {
   content = templatefile("${path.module}/templates/os_hardening_playbook.tpl",
   {})
 
-  file_permission = 0644
+  file_permission = "0644"
   filename = "./inventory/os_hardening_playbook.yml"
 }
 
