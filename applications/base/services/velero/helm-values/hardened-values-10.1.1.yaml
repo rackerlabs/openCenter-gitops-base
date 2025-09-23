@@ -347,7 +347,7 @@ kubectl:
     # If used, it will take precedence over the kubectl.image.tag.
     # digest:
     # kubectl image tag. If used, it will take precedence over the cluster Kubernetes version.
-    tag: 1758642389
+    tag: '1758642389'
   # Container Level Security Context for the 'kubectl' container of the crd jobs. Optional.
   # See: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
   containerSecurityContext: {}
