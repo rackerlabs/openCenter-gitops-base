@@ -1,5 +1,5 @@
 ---
-namespace: rackspace
+namespace: rackspace-system
 
 replicaCount: 1
 
