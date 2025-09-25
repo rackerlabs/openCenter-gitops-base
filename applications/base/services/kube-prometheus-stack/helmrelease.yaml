@@ -31,12 +31,12 @@ spec:
     - kind: Secret
       name: kube-prometheus-stack-values-base
       valuesKey: hardened.yaml
-    - kind: Secret
-      name: kube-prometheus-stack-values-base
-      valuesKey: alerting-rules-overrides.yaml
-    - kind: Secret
-      name: kube-prometheus-stack-values-base
-      valuesKey: alertmanager-overrides.yaml
+#    - kind: Secret
+#      name: kube-prometheus-stack-values-base
+#      valuesKey: alerting-rules-overrides.yaml
+#    - kind: Secret
+#      name: kube-prometheus-stack-values-base
+#      valuesKey: alertmanager-overrides.yaml
     - kind: Secret
       name: kube-prometheus-stack-values-base
       valuesKey: prometheus-overrides.yaml
