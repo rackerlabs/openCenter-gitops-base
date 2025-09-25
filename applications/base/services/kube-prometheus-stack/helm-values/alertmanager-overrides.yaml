@@ -39,5 +39,5 @@ alertmanager:
             webhook_url: ""
       - name: alert_proxy_receiver
         webhook_configs:
-          - url: http://alert-proxy.rackspace.svc.cluster.local/alert/process
+          - url: http://alert-proxy.rackspace-system.svc.cluster.local/alert/process
             send_resolved: true
