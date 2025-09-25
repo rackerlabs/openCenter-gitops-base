@@ -23,7 +23,7 @@ alertmanager:
       group_interval: 60s
       repeat_interval: 12h
       routes:
-        - receiver: 'null'
+        - receiver: "null"
           matchers: [alertname = "Watchdog"]
         - receiver: warning_alerts_receiver
           continue: false
@@ -32,11 +32,11 @@ alertmanager:
           continue: false
           matchers: [severity =~ "critical']
     receivers:
-      - name: 'null'
+      - name: "null"
       - name: warning_alerts_receiver
         msteams_configs:
           - send_resolved: true
-            webhook_url: ''
+            webhook_url: ""
       - name: alert_proxy_receiver
         webhook_configs:
           - url: http://alert-proxy.rackspace.svc.cluster.local/alert/process
