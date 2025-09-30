@@ -5,6 +5,7 @@ This guide explains how to add a new service to the openCenter GitOps base repos
 ## Overview
 
 All services in openCenter GitOps follow a consistent structure using Flux CD's GitOps approach with:
+
 - **HelmRepository**: Defines the Helm chart source
 - **HelmRelease**: Manages the application deployment
 - **Kustomization**: Orchestrates resources and generates secrets
@@ -48,6 +49,7 @@ metadata:
 ```
 
 **Key Points:**
+
 - Use a clear, descriptive namespace name
 - Follow kebab-case naming convention
 - Keep namespace name consistent with service name
@@ -68,6 +70,7 @@ spec:
 ```
 
 **Example using cert-manager:**
+
 ```yaml
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
@@ -80,6 +83,7 @@ spec:
 ```
 
 **Key Configuration:**
+
 - `metadata.name`: Unique identifier for the repository
 - `spec.url`: HTTPS URL to the Helm repository
 - `spec.interval`: How often to check for updates (typically 1h)
@@ -129,6 +133,7 @@ spec:
 ```
 
 **Example using cert-manager:**
+
 ```yaml
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
@@ -170,6 +175,7 @@ spec:
 ```
 
 **Key Configuration:**
+
 - `spec.interval`: 5m reconciliation cycle (standard)
 - `spec.timeout`: 10m installation timeout (standard)
 - `spec.driftDetection.mode`: enabled (required for consistency)
@@ -183,6 +189,7 @@ Create `applications/base/services/my-service/helm-values/hardened-values-vX.Y.Z
 This file contains security-hardened configuration for the Helm chart. Use the chart version in the filename for versioning.
 
 **Example structure for cert-manager:**
+
 ```yaml
 # Security configurations
 replicaCount: 2
@@ -212,6 +219,7 @@ crds:
 ```
 
 **Security Hardening Guidelines:**
+
 - Enable non-root execution (`runAsNonRoot: true`)
 - Use security profiles (`seccompProfile.type: RuntimeDefault`)
 - Drop all capabilities (`capabilities.drop: [ALL]`)
@@ -228,7 +236,10 @@ Create `applications/base/services/my-service/kustomization.yaml`:
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-resources: [./namespace.yaml, ./source.yaml, ./helmrelease.yaml]
+resources: 
+  - "./namespace.yaml"
+  - "./source.yaml"
+  - "./helmrelease.yaml"
 
 secretGenerator:
   - name: my-service-values-base
@@ -239,11 +250,15 @@ secretGenerator:
 ```
 
 **Example using cert-manager:**
+
 ```yaml
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-resources: [./namespace.yaml, ./source.yaml, ./helmrelease.yaml]
+resources:
+  - "./namespace.yaml"
+  - "./source.yaml"
+  - "./helmrelease.yaml"
 
 secretGenerator:
   - name: cert-manager-values-base
@@ -254,27 +269,23 @@ secretGenerator:
 ```
 
 **Key Configuration:**
+
 - `resources`: List all YAML files to include
 - `secretGenerator`: Creates Kubernetes secrets from hardened values
 - `disableNameSuffixHash: true`: Required for consistent secret naming
 
-### Step 7: Integration with Parent Kustomization
-
-To include your new service in the GitOps deployment, it must be referenced in a parent kustomization file. Services are typically included at the cluster or environment level.
-
-For example, in `applications/overlays/my-cluster/kustomization.yaml`:
-
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - ../../base/services/cert-manager
-  - ../../base/services/my-service  # Add your new service here
-```
-
 ## Validation and Testing
 
-### Step 1: Validate Kustomization
+### Step 1: Validate HelmRelease
+
+Check if the HelmRelease configuration is valid:
+
+```bash
+cd applications/base/services/my-service
+kubectl apply --dry-run=server -f helmrelease.yaml
+```
+
+### Step 2: Validate Kustomization
 
 Test the kustomization builds correctly:
 
@@ -283,27 +294,86 @@ cd applications/base/services/my-service
 kubectl kustomize . --dry-run=server
 ```
 
-### Step 2: Validate HelmRelease
+### Step 3: Deploying service to Kubernetes Cluster
 
-Check if the HelmRelease configuration is valid:
+To include a new service in the Kubernetes cluster, it must be referenced in the cluster's GitOps repository.
+
+For example: Deploying `cert-manager`
+
+- Create a GitRepository secret for Flux:
 
 ```bash
-kubectl apply --dry-run=server -f helmrelease.yaml
+flux create secret git opencenter-base --ssh-key-algorithm=ed25519 --url=ssh://git@github.com/rackerlabs/openCenter-gitops-base.git   -n flux-system
 ```
 
-### Step 3: Deploy and Monitor
+- Add the generated `deploy key` to [openCenter GitOps base repository](https://github.com/rackerlabs/openCenter-gitops-base). Refer [GitHub’s documentation on deploy keys](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys#set-up-deploy-keys) for more details.
 
-After committing to Git, monitor the deployment:
+- Update the Cluster GitOps repository:
+  - Create a source definition at: `applications/overlays/<cluster>/services/sources/opencenter-cert-manager.yaml`
+
+    ```yaml
+    ---
+    apiVersion: source.toolkit.fluxcd.io/v1
+    kind: GitRepository
+    metadata:
+      name: opencenter-cert-manager
+      namespace: flux-system
+    spec:
+      interval: 15m
+      url: ssh://git@github.com/rackerlabs/openCenter-gitops-base.git
+      ref:
+        branch: main
+      secretRef:
+        name: opencenter-base
+    ```
+
+  - Create a Kustomization at: `applications/overlays/<cluster>/services/fluxcd/cert-manager.yaml`:
+
+    ```yaml
+    ---
+    apiVersion: kustomize.toolkit.fluxcd.io/v1
+    kind: Kustomization
+    metadata:
+      name: cert-manager-base
+      namespace: flux-system
+    spec:
+      dependsOn:
+        - name: sources
+          namespace: flux-system
+      interval: 5m
+      retryInterval: 1m
+      timeout: 10m
+      sourceRef:
+        kind: GitRepository
+        name: opencenter-cert-manager
+        namespace: flux-system
+      path: applications/base/services/cert-manager
+      targetNamespace: cert-manager
+      prune: true
+      healthChecks:
+        - apiVersion: helm.toolkit.fluxcd.io/v2
+          kind: HelmRelease
+          name: cert-manager
+          namespace: cert-manager
+      commonMetadata:
+        labels:
+          app.kubernetes.io/part-of: cert-manager
+          app.kubernetes.io/managed-by: flux
+          opencenter/managed-by: opencenter
+    ```
+
+### Step 4: Monitor
+
+After committing changes to the Kubernetes cluster GitOps repository, monitor the deployment to ensure it reconciles correctly:
 
 ```bash
 # Check Flux reconciliation
+kubectl get gitrepository -n flux-system
+kubectl get kustomization -n flux-system
 kubectl get helmreleases -n my-service
 
 # Check application status
 kubectl get pods -n my-service
-
-# View Flux logs if issues occur
-kubectl logs -n flux-system deploy/helm-controller
 ```
 
 ## Common Configuration Patterns
@@ -368,23 +438,28 @@ chart:
 ### Common Issues
 
 1. **HelmRelease Stuck in Installing State**
+
    ```bash
    kubectl describe helmrelease my-service -n my-service
    kubectl logs -n flux-system deploy/helm-controller
    ```
 
-2. **Secret Generation Failures**
-   ```bash
-   kubectl kustomize applications/base/services/my-service
-   ```
+2. **Authentication / Git Access**
+
+- **Symptom**: Failed to fetch repository, permission denied (publickey), or reconciliation stuck on GitRepository.
+- **Fix**:
+  - Verify the deploy key was added to the GitHub repo with read-only permissions.
+  - Ensure the Flux Secret name matches what is referenced in the GitRepository.
 
 3. **Chart Source Not Found**
+
    ```bash
    kubectl get helmrepositories -A
    kubectl describe helmrepository my-service-repo -n my-service
    ```
 
 4. **Values Override Issues**
+
    ```bash
    kubectl get secret my-service-values-base -n my-service -o yaml
    ```
@@ -392,11 +467,17 @@ chart:
 ### Debugging Commands
 
 ```bash
+# View Flux logs if issues occur
+kubectl logs -n flux-system deploy/helm-controller
+kubectl logs -n flux-system deploy/kustomize-controller
+kubectl logs -n flux-system deploy/source-controller
+
 # Force reconciliation
-flux reconcile helmrelease my-service -n my-service
+flux reconcile kustomization my-service  -n flux-system --with-source
+flux reconcile helmrelease my-service -n my-service --with-source
 
 # Check all Flux resources
-kubectl get gitrepositories,helmrepositories,helmreleases -A
+kubectl get kustomization,gitrepositories,helmrepositories,helmreleases -A
 
 # View generated manifests
 helm template my-service-repo/my-service --values /tmp/values.yaml
@@ -405,24 +486,28 @@ helm template my-service-repo/my-service --values /tmp/values.yaml
 ## Best Practices
 
 ### Security
+
 - Always use hardened values with security contexts
 - Pin exact chart versions, avoid ranges or latest
 - Enable drift detection for configuration consistency
 - Use least-privilege RBAC configurations
 
 ### Reliability
+
 - Set appropriate timeouts and retry policies
 - Use health checks and readiness probes
 - Configure resource limits and requests
 - Enable monitoring and observability
 
 ### Maintainability
+
 - Use consistent naming conventions
 - Version hardened values files with chart versions
 - Document service-specific configurations
 - Follow the established directory structure
 
 ### GitOps Workflow
+
 - Commit all changes to version control
 - Use pull requests for service additions
 - Test in development environments first
@@ -433,6 +518,7 @@ helm template my-service-repo/my-service --values /tmp/values.yaml
 Here's the complete cert-manager implementation as a reference:
 
 **Directory Structure:**
+
 ```
 applications/base/services/cert-manager/
 ├── kustomization.yaml
