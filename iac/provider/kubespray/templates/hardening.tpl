@@ -76,15 +76,16 @@ kube_profiling: true
 remove_anonymous_access: false
 
 # ## kube-controller-manager
-kube_controller_manager_bind_address: 127.0.0.1
+kube_controller_manager_bind_address: "{{ ansible_host }}"
 kube_controller_terminated_pod_gc_threshold: 50
 kube_controller_feature_gates: ["RotateKubeletServerCertificate=true"] # False until I figure how to deploy a helm chart after the cni is deployed
 
 ## kube-scheduler
-kube_scheduler_bind_address: 127.0.0.1
+kube_scheduler_bind_address: "{{ ansible_host }}"
 
 ## etcd
 etcd_deployment_type: kubeadm
+etcd_listen_metrics_urls: "http://{{ ansible_host }}:2381"
 
 # ## kubelet
 kubelet_authorization_mode_webhook: true
@@ -111,9 +112,9 @@ kubelet_csr_approver_values:
 # # to specify the IP from which the kubelet
 # # will receive the packets.
 %{ if network_plugin == "kube-ovn" ~}
-kubelet_secure_addresses: "localhost link-local {{ kube_pods_subnets | regex_replace(',', ' ') }} {{ kube_node_addresses }} {{ loadbalancer_apiserver.address | default('') }} ${subnet_join}"
+kubelet_secure_addresses: "localhost link-local ${subnet_pods} ${subnet_nodes} ${vrrp_ip} ${subnet_join}"
 %{ else ~}
-kubelet_secure_addresses: "localhost link-local {{ kube_pods_subnets | regex_replace(',', ' ') }} {{ kube_node_addresses }} {{ loadbalancer_apiserver.address | default('') }}"
+kubelet_secure_addresses: ""localhost link-local ${subnet_pods} ${subnet_nodes} ${vrrp_ip}"
 %{ endif ~}
 # # additional configurations
 kube_owner: root

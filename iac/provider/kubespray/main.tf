@@ -86,6 +86,8 @@ resource "local_file" "k8s_hardening" {
       k8s_api_port                            = var.k8s_api_port
       kube_vip_enabled                        = var.kube_vip_enabled
       network_plugin                          = var.network_plugin
+      subnet_pods                             = var.subnet_pods
+      subnet_nodes                            = var.subnet_nodes
       subnet_join                             = var.subnet_join
       kube_pod_security_exemptions_namespaces = var.kube_pod_security_exemptions_namespaces
       kubelet_rotate_server_certificates      = var.kubelet_rotate_server_certificates
