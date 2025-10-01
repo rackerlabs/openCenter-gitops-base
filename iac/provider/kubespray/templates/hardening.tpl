@@ -76,16 +76,16 @@ kube_profiling: true
 remove_anonymous_access: false
 
 # ## kube-controller-manager
-kube_controller_manager_bind_address: "{{ ansible_host }}"
+kube_controller_manager_bind_address: 0.0.0.0
 kube_controller_terminated_pod_gc_threshold: 50
 kube_controller_feature_gates: ["RotateKubeletServerCertificate=true"] # False until I figure how to deploy a helm chart after the cni is deployed
 
 ## kube-scheduler
-kube_scheduler_bind_address: "{{ ansible_host }}"
+kube_scheduler_bind_address: 0.0.0.0
 
 ## etcd
 etcd_deployment_type: kubeadm
-etcd_listen_metrics_urls: "http://{{ ansible_host }}:2381"
+etcd_listen_metrics_urls: "http://0.0.0.0:2381"
 
 # ## kubelet
 kubelet_authorization_mode_webhook: true
