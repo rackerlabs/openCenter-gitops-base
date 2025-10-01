@@ -114,7 +114,7 @@ kubelet_csr_approver_values:
 %{ if network_plugin == "kube-ovn" ~}
 kubelet_secure_addresses: "localhost link-local ${subnet_pods} ${subnet_nodes} ${vrrp_ip} ${subnet_join}"
 %{ else ~}
-kubelet_secure_addresses: ""localhost link-local ${subnet_pods} ${subnet_nodes} ${vrrp_ip}"
+kubelet_secure_addresses: "localhost link-local ${subnet_pods} ${subnet_nodes} ${vrrp_ip}"
 %{ endif ~}
 # # additional configurations
 kube_owner: root
