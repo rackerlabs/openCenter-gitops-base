@@ -1,9 +1,13 @@
 ---
 namespace: sealed-secrets
-resources: [./namespace.yaml, ./source.yaml, ./helmrelease.yaml]
+resources:
+  - "namespace.yaml"
+  - "source.yaml"
+  - "helmrelease.yaml"
 secretGenerator:
   - name: sealed-secrets-values-base
     type: Opaque
-    files: [hardened.yaml=helm-values/hardened-values-2.17.3.yaml]
+    files:
+      - hardened.yaml="helm-values/hardened-values-2.17.3.yaml"
     options:
       disableNameSuffixHash: true
