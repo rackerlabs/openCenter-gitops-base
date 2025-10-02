@@ -3,7 +3,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: alert-proxy
-  namespace: rackspace-system
+  namespace: rackspace
 spec:
   interval: 5m
   timeout: 10m
@@ -17,7 +17,7 @@ spec:
     remediation:
       retries: 0
       remediateLastFailure: false
-  targetNamespace: rackspace-system
+  targetNamespace: rackspace
   chart:
     spec:
       chart: ./helm
