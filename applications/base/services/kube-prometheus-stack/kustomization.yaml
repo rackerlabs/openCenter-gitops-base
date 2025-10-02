@@ -10,8 +10,8 @@ secretGenerator:
     namespace: observability
     type: Opaque
     files:
-      - hardened.yaml="helm-values/hardened-values-v0.0.1.yaml"
-      - alertmanager-overrides.yaml="helm-values/alertmanager-overrides.yaml"
-      - prometheus-overrides.yaml="helm-values/prometheus-overrides.yaml"
+      - hardened.yaml=helm-values/hardened-values-v0.0.1.yaml
+      - alertmanager-overrides.yaml=helm-values/alertmanager-overrides.yaml
+      - prometheus-overrides.yaml=helm-values/prometheus-overrides.yaml
     options:
       disableNameSuffixHash: true

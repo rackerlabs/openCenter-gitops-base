@@ -10,6 +10,6 @@ secretGenerator:
   - name: postgres-operator-values-base
     type: Opaque
     files:
-      - hardened.yaml="helm-values/hardened-values-1.14.0.yaml"
+      - hardened.yaml=helm-values/hardened-values-1.14.0.yaml
     options:
       disableNameSuffixHash: true

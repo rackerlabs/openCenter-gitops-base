@@ -10,6 +10,6 @@ secretGenerator:
     namespace: rackspace
     type: Opaque
     files:
-      - hardened.yaml="helm-values/hardened-values-v0.0.1.yaml"
+      - hardened.yaml=helm-values/hardened-values-v0.0.1.yaml
     options:
       disableNameSuffixHash: true

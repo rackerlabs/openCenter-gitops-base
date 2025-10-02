@@ -8,6 +8,6 @@ secretGenerator:
   - name: sealed-secrets-values-base
     type: Opaque
     files:
-      - hardened.yaml="helm-values/hardened-values-2.17.3.yaml"
+      - hardened.yaml=helm-values/hardened-values-2.17.3.yaml
     options:
       disableNameSuffixHash: true

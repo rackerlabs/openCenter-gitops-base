@@ -9,6 +9,6 @@ secretGenerator:
   - name: cert-manager-values-base
     type: Opaque
     files:
-      - hardened.yaml="helm-values/hardened-values-v1.18.2.yaml"
+      - hardened.yaml=helm-values/hardened-values-v1.18.2.yaml
     options:
       disableNameSuffixHash: true
