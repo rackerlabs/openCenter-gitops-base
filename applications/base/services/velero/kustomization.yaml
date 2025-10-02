@@ -1,9 +1,13 @@
 ---
 namespace: velero
-resources: [./namespace.yaml, ./source.yaml, ./helmrelease.yaml]
+resources:
+  - "namespace.yaml"
+  - "source.yaml"
+  - "helmrelease.yaml"
 secretGenerator:
   - name: velero-values-base
     type: Opaque
-    files: [hardened.yaml=helm-values/hardened-values-10.1.1.yaml]
+    files:
+      - hardened.yaml="helm-values/hardened-values-10.1.1.yaml"
     options:
       disableNameSuffixHash: true
