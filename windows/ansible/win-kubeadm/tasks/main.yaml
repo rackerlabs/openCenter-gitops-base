@@ -1,0 +1,301 @@
+---
+- name: Check if ContainerD service is running
+  ansible.windows.win_service_info:
+    name: containerd
+  register: containerd_service
+  
+- name: Fail if ContainerD is not running
+  fail:
+    msg: "ContainerD service was not detected - please install and start containerD before running this playbook"
+  when: containerd_service.services[0].state != 'started'
+
+# Ensure kubernetes version starts with 'v'
+- name: Normalize Kubernetes version
+  set_fact:
+    kubernetes_version: "v{{ kubernetes_version }}"
+  when: not kubernetes_version.startswith('v')
+
+# Create required directories
+- name: Create Kubernetes directories
+  win_file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ kubernetes_path }}"
+    - "{{ kubelet_log_path }}"
+    - "C:\\var\\lib\\kubelet\\etc\\kubernetes"
+    - "C:\\etc\\kubernetes\\pki"
+    - "C:\\etc\\kubernetes\\manifests"
+
+# Create symbolic links
+- name: Create kubelet pki symbolic link
+  win_command: >
+    powershell.exe -Command "New-Item -Path 'C:\var\lib\kubelet\etc\kubernetes\pki' -ItemType SymbolicLink -Value 'C:\etc\kubernetes\pki\' -Force"
+
+- name: Create ssl to pki symbolic link
+  win_command: >
+    powershell.exe -Command "New-Item -Path 'C:\etc\kubernetes\ssl' -ItemType SymbolicLink -Value 'C:\etc\kubernetes\pki' -Force"
+
+# Download Kubernetes binaries
+- name: Download kubelet.exe
+  win_get_url:
+    url: "https://dl.k8s.io/{{ kubernetes_version }}/bin/windows/amd64/kubelet.exe"
+    dest: "{{ kubernetes_path }}\\kubelet.exe"
+    force: true
+
+- name: Download kubeadm.exe
+  win_get_url:
+    url: "https://dl.k8s.io/{{ kubernetes_version }}/bin/windows/amd64/kubeadm.exe"
+    dest: "{{ kubernetes_path }}\\kubeadm.exe"
+    force: true
+
+# Add Kubernetes path to system PATH
+- name: Add Kubernetes path to system PATH
+  win_path:
+    elements:
+      - "{{ kubernetes_path }}"
+    state: present
+
+# Download and install NSSM
+- name: Create temp directory
+  win_file:
+    path: "C:\\temp"
+    state: directory
+
+- name: Download NSSM
+  win_get_url:
+    url: "https://k8stestinfrabinaries.blob.core.windows.net/nssm-mirror/nssm-2.24.zip"
+    dest: "C:\\temp\\nssm.zip"
+    force: true
+
+- name: Create NSSM directory
+  win_file:
+    path: "{{ nssm_install_directory }}"
+    state: directory
+
+- name: Extract NSSM
+  win_unzip:
+    src: "C:\\temp\\nssm.zip"
+    dest: "C:\\temp\\nssm-extracted"
+
+- name: Determine NSSM architecture
+  set_fact:
+    nssm_arch: "{{ 'win64' if ansible_architecture == 'x86_64' else 'win32' }}"
+
+- name: Copy NSSM executable to install directory
+  win_copy:
+    src: "C:\\temp\\nssm-extracted\\nssm-2.24\\{{ nssm_arch }}\\nssm.exe"
+    dest: "{{ nssm_install_directory }}\\nssm.exe"
+    remote_src: true
+
+- name: Add NSSM to system PATH
+  win_path:
+    elements:
+      - "{{ nssm_install_directory }}"
+    state: present
+
+# Create StartKubelet.ps1 script with node-ip parameter
+- name: Create StartKubelet.ps1 script
+  win_copy:
+    content: |
+      $FileContent = Get-Content -Path "/var/lib/kubelet/kubeadm-flags.env"
+      $global:KubeletArgs = $FileContent.TrimStart('KUBELET_KUBEADM_ARGS=').Trim('"')
+
+      $cmd = "C:\k\kubelet.exe $global:KubeletArgs --cert-dir=C:\var\lib\kubelet\pki --config=/var/lib/kubelet/config.yaml --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf --hostname-override={{ hostname_override }} --node-ip={{ ansible_host }} --pod-infra-container-image=`"mcr.microsoft.com/oss/kubernetes/pause:3.6`" --enable-debugging-handlers --cgroups-per-qos=false --enforce-node-allocatable=`"`" --resolv-conf=`"`""
+      Invoke-Expression $cmd
+    dest: "{{ kubernetes_path }}\\StartKubelet.ps1"
+
+# Configure kubelet service using NSSM
+- name: Check if kubelet service exists
+  win_command: >
+    "{{ nssm_install_directory }}\nssm.exe" status kubelet
+  register: kubelet_status
+  failed_when: false
+  changed_when: false
+
+- name: Install kubelet service with NSSM
+  win_command: >
+    "{{ nssm_install_directory }}\nssm.exe" install kubelet powershell.exe "-ExecutionPolicy" "Bypass" "-NoProfile" "{{ kubernetes_path }}\StartKubelet.ps1"
+  when: kubelet_status.rc != 0
+
+- name: Configure kubelet service stdout log
+  win_command: >
+    "{{ nssm_install_directory }}\nssm.exe" set kubelet AppStdout "{{ kubelet_log_path }}\kubelet.out.log"
+  when: kubelet_status.rc != 0
+
+- name: Configure kubelet service stderr log
+  win_command: >
+    "{{ nssm_install_directory }}\nssm.exe" set kubelet AppStderr "{{ kubelet_log_path }}\kubelet.err.log"
+  when: kubelet_status.rc != 0
+
+# Configure log rotation
+- name: Enable log rotation
+  win_command: "{{ item }}"
+  loop:
+    - '"{{ nssm_install_directory }}\nssm.exe" set kubelet AppRotateFiles 1'
+    - '"{{ nssm_install_directory }}\nssm.exe" set kubelet AppRotateOnline 1'
+    - '"{{ nssm_install_directory }}\nssm.exe" set kubelet AppRotateSeconds 86400'
+    - '"{{ nssm_install_directory }}\nssm.exe" set kubelet AppRotateBytes 10485760'
+  when: kubelet_status.rc != 0
+
+# Set service dependency
+- name: Set kubelet dependency on containerd
+  win_command: >
+    "{{ nssm_install_directory }}\nssm.exe" set kubelet DependOnService containerd
+  when: kubelet_status.rc != 0
+
+# Enable and start kubelet service
+- name: Enable kubelet service to start automatically
+  win_service:
+    name: kubelet
+    start_mode: auto
+    state: started
+
+# Configure firewall
+- name: Create firewall rule for kubelet
+  win_firewall_rule:
+    name: kubelet
+    localport: 10250
+    action: allow
+    direction: in
+    protocol: tcp
+    state: present
+    enabled: true
+
+# Add hosts entry for load balancer
+- name: Add lb-apiserver.kubernetes.local to hosts file
+  win_lineinfile:
+    path: C:\Windows\System32\drivers\etc\hosts
+    line: "{{ k8s_internal_vip }} lb-apiserver.kubernetes.local"
+    state: present
+
+# Clean up temporary files
+- name: Clean up temporary files
+  win_file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "C:\\temp\\nssm.zip"
+    - "C:\\temp\\nssm-extracted"
+
+# Enable BGP service on Windows nodes
+- name: Install RemoteAccess Windows feature
+  win_feature:
+    name: RemoteAccess
+    state: present
+  register: remoteaccess_install
+
+- name: Install RSAT-RemoteAccess-PowerShell Windows feature
+  win_feature:
+    name: RSAT-RemoteAccess-PowerShell
+    state: present
+  register: rsat_remoteaccess_install
+
+- name: Install Routing Windows feature
+  win_feature:
+    name: Routing
+    state: present
+  register: routing_install
+
+- name: Reboot after RemoteAccess features installation
+  win_reboot:
+    reboot_timeout: 600
+    connect_timeout: 5
+  when: remoteaccess_install.reboot_required or rsat_remoteaccess_install.reboot_required or routing_install.reboot_required
+
+- name: Install RemoteAccess with VPN type RoutingOnly
+  ansible.windows.win_powershell:
+    script: |
+      Install-RemoteAccess -VpnType RoutingOnly
+  register: install_remoteaccess_result
+  failed_when: false
+
+- name: Start RemoteAccess service
+  win_service:
+    name: RemoteAccess
+    state: started
+    start_mode: auto
+
+# Get join command from control plane and execute it
+- name: Get kubeadm join token from control plane
+  shell: kubeadm token create --print-join-command
+  register: join_command_output
+  delegate_to: "{{ groups['oc_controlplane_nodes'][0] }}"
+  run_once: true
+  become: yes
+  tags: join
+
+- name: Check if kubelet and kubeadm are in PATH
+  win_command: "where kubelet"
+  register: kubelet_path_check
+  failed_when: false
+  changed_when: false
+  tags: join
+
+- name: Check if kubeadm is in PATH
+  win_command: "where kubeadm"
+  register: kubeadm_path_check
+  failed_when: false
+  changed_when: false
+  tags: join
+
+- name: Reboot Windows node if Kubernetes binaries are not in PATH
+  win_reboot:
+    reboot_timeout: 600
+    connect_timeout: 5
+    test_command: 'exit (Get-Service -Name sshd).Status -ne "Running"'
+  when: kubelet_path_check.rc != 0 or kubeadm_path_check.rc != 0
+  tags: join
+
+# Create kube-dns service for Windows compatibility
+- name: Create kube-dns service for Windows node compatibility
+  shell: |
+    kubectl apply -f - <<EOF
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: kube-dns
+      namespace: kube-system
+      labels:
+        k8s-app: kube-dns
+    spec:
+      selector:
+        k8s-app: kube-dns
+      ports:
+      - name: dns
+        port: 53
+        protocol: UDP
+        targetPort: 53
+      - name: dns-tcp
+        port: 53
+        protocol: TCP
+        targetPort: 53
+    EOF
+  delegate_to: "{{ groups['oc_controlplane_nodes'][0] }}"
+  run_once: true
+  become: yes
+  tags: join
+
+- name: Execute kubeadm join command on Windows node
+  win_command: >
+    "{{ kubernetes_path }}\kubeadm.exe" join {{ join_command_output.stdout.strip() | regex_replace('^kubeadm join ', '') }} --cri-socket "npipe:////./pipe/containerd-containerd"
+  tags: join
+
+
+
+# Display completion message
+- name: Display completion message
+  debug:
+    msg: |
+      Windows Kubernetes node preparation and join completed successfully!
+      
+      Next steps:
+      1. Apply CNI DaemonSet (flannel/calico/etc.)
+      2. Apply kube-proxy configuration
+      
+      The kubelet service has been configured with:
+      - Node IP: {{ ansible_host }}
+      - Hostname override: {{ hostname_override }}
+      - Load balancer endpoint: lb-apiserver.kubernetes.local -> {{ vrrp_ip }}
+      
+      Join command executed: {{ join_command_output.stdout.strip() }}

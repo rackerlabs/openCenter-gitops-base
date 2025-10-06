@@ -1,0 +1,245 @@
+---
+- name: Check if reboot is pending
+  win_shell: |
+    if ((Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -Name "PendingFileRenameOperations" -ErrorAction SilentlyContinue) -or
+        (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired" -ErrorAction SilentlyContinue) -or
+        (Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending" -ErrorAction SilentlyContinue)) {
+      Write-Output "true"
+    } else {
+      Write-Output "false"
+    }
+  register: reboot_pending
+  changed_when: false
+
+- name: Reboot the machine with all defaults
+  ansible.windows.win_reboot:
+    test_command: 'exit (Get-Service -Name sshd).Status -ne "Running"'
+  when: reboot_pending.stdout.strip() == "true"
+
+- name: Check current Windows features
+  win_shell: |
+    $features = @("Containers")
+    if (-not ${{ skip_hypervisor_support_check | lower }}) {
+      $features += @("Hyper-V", "Hyper-V-PowerShell")
+    }
+    
+    $results = @()
+    foreach ($feature in $features) {
+      $installed = (Get-WindowsFeature -Name $feature).InstallState -eq "Installed"
+      $results += [PSCustomObject]@{
+        Name = $feature
+        Installed = $installed
+      }
+    }
+    $results | ConvertTo-Json
+  register: windows_features_status
+  changed_when: false
+
+- name: Parse Windows features status
+  set_fact:
+    features_status: "{{ windows_features_status.stdout | from_json }}"
+
+- name: Install required Windows features
+  win_feature:
+    name: "{{ item.Name }}"
+    state: present
+  register: feature_install_result
+  loop: "{{ features_status }}"
+  when: not item.Installed
+  notify: set reboot flag
+
+- name: Handle Hyper-V optional features when skipping hypervisor check
+  block:
+    - name: Check Microsoft-Hyper-V optional feature status
+      win_shell: |
+        $state = (Get-WindowsOptionalFeature -FeatureName "Microsoft-Hyper-V" -Online).State
+        Write-Output $state
+      register: hyperv_feature_state
+      changed_when: false
+
+    - name: Enable Microsoft-Hyper-V optional feature
+      win_shell: |
+        DISM /Online /Enable-Feature /FeatureName:Microsoft-Hyper-V /All /NoRestart
+      register: hyperv_enable_result
+      when: hyperv_feature_state.stdout.strip() != "Enabled"
+      notify: set reboot flag
+
+    - name: Check Microsoft-Hyper-V-Online optional feature status
+      win_shell: |
+        $state = (Get-WindowsOptionalFeature -FeatureName "Microsoft-Hyper-V-Online" -Online).State
+        Write-Output $state
+      register: hyperv_online_feature_state
+      changed_when: false
+
+    - name: Disable Microsoft-Hyper-V-Online optional feature
+      win_shell: |
+        DISM /Online /Disable-Feature /FeatureName:Microsoft-Hyper-V-Online /NoRestart
+      register: hyperv_online_disable_result
+      when: hyperv_online_feature_state.stdout.strip() != "Disabled"
+      notify: set reboot flag
+
+  when: skip_hypervisor_support_check
+
+- name: Check if reboot is needed after feature installation
+  meta: flush_handlers
+
+- name: Reboot if needed
+  win_reboot:
+    reboot_timeout: 600
+  when: reboot_required | default(false)
+
+- name: Create ContainerD directory
+  win_file:
+    path: "{{ containerd_path }}"
+    state: directory
+
+- name: Check if ContainerD is already installed
+  win_stat:
+    path: "{{ containerd_path }}\\containerd.exe"
+  register: containerd_exe_stat
+
+
+- name: Download ContainerD binaries
+  block:
+    - name: Download ContainerD archive
+      win_get_url:
+        url: "https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/containerd-{{ containerd_version }}-windows-amd64.tar.gz"
+        dest: "{{ containerd_path }}\\containerd.tar.gz"
+        force: yes
+
+    - name: Extract ContainerD archive
+      win_shell: |
+        tar.exe -xvf "{{ containerd_path }}\\containerd.tar.gz" --strip=1 -C "{{ containerd_path }}"
+      args:
+        creates: "{{ containerd_path }}\\containerd.exe"
+
+    - name: Remove ContainerD archive
+      win_file:
+        path: "{{ containerd_path }}\\containerd.tar.gz"
+        state: absent
+
+  when: >
+    not containerd_exe_stat.stat.exists
+
+- name: Add ContainerD to system PATH
+  win_path:
+    elements:
+      - "{{ containerd_path }}"
+    scope: machine
+
+- name: Generate and configure ContainerD config file
+  win_shell: |
+    # Generate default config and apply CNI path modifications
+    $config = & '{{ containerd_path }}\\containerd.exe' config default
+    $config = $config -replace 'bin_dir = (.)*$', 'bin_dir = "{{ cni_bin_path }}"'
+    $config = $config -replace 'conf_dir = (.)*$', 'conf_dir = "{{ cni_config_path }}"'
+
+
+    # Check if config file exists and compare content
+    $configPath = "{{ containerd_path }}\\config.toml"
+    $needsUpdate = $true
+    
+    if (Test-Path $configPath) {
+      $existingConfig = Get-Content $configPath -Raw
+      if ($existingConfig.Trim() -eq $config.Trim()) {
+        $needsUpdate = $false
+      }
+    }
+    
+    if ($needsUpdate) {
+      $config | Set-Content "{{ containerd_path }}\\config.toml"
+      Write-Output "changed"
+    } else {
+      Write-Output "unchanged"
+    }
+  register: config_update_result
+  changed_when: config_update_result.stdout.strip() == "changed"
+  notify: restart containerd service
+  tags: prep
+
+- name: Create CNI directories
+  win_file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ cni_bin_path }}"
+    - "{{ cni_config_path }}"
+
+- name: Check if ContainerD service is registered
+  ansible.windows.win_service_info:
+    name: containerd
+  register: containerd_service_info
+
+- name: Register ContainerD as a Windows service
+  win_shell: |
+    & "{{ containerd_path }}\\containerd.exe" --register-service
+  when: not containerd_service_info.exists
+
+- name: Start and enable ContainerD service
+  win_service:
+    name: containerd
+    state: started
+    start_mode: auto
+
+- name: Check if crictl is already installed
+  win_stat:
+    path: "{{ containerd_path }}\\crictl.exe"
+  register: crictl_exe_stat
+
+- name: Check installed crictl version
+  win_shell: |
+    if (Test-Path "{{ containerd_path }}\\crictl.exe") {
+      & "{{ containerd_path }}\\crictl.exe" version | Select-String "RuntimeVersion:" | ForEach-Object { $_.ToString().Split()[1].Trim('v') }
+    } else {
+      Write-Output "not_installed"
+    }
+  register: installed_crictl_version
+  changed_when: false
+  when: crictl_exe_stat.stat.exists
+
+- name: Download and install crictl
+  block:
+    - name: Download crictl archive
+      win_get_url:
+        url: "https://github.com/kubernetes-sigs/cri-tools/releases/download/v{{ crictl_version }}/crictl-v{{ crictl_version }}-windows-amd64.tar.gz"
+        dest: "{{ containerd_path }}\\crictl.tar.gz"
+        force: yes
+
+    - name: Extract crictl archive
+      win_shell: |
+        tar.exe -xvf "{{ containerd_path }}\\crictl.tar.gz" -C "{{ containerd_path }}"
+      args:
+        creates: "{{ containerd_path }}\\crictl.exe"
+
+    - name: Remove crictl archive
+      win_file:
+        path: "{{ containerd_path }}\\crictl.tar.gz"
+        state: absent
+
+  when: >
+    not crictl_exe_stat.stat.exists or 
+    (installed_crictl_version.stdout.strip() != crictl_version and 
+      installed_crictl_version.stdout.strip() != "not_installed")
+
+- name: Create crictl configuration directory
+  win_file:
+    path: "{{ ansible_env.USERPROFILE }}\\.crictl"
+    state: directory
+
+- name: Create crictl configuration file
+  win_copy:
+    content: |
+      runtime-endpoint: npipe://./pipe/containerd-containerd
+      image-endpoint: npipe://./pipe/containerd-containerd
+    dest: "{{ ansible_env.USERPROFILE }}\\.crictl\\crictl.yaml"
+
+- name: Display completion message
+  debug:
+    msg: |
+      ContainerD installation completed successfully!
+      
+      Remember to add '--cri-socket "npipe:////./pipe/containerd-containerd"' 
+      to your kubeadm join command if your Kubernetes version is below 1.25!
+
+
+

@@ -1,0 +1,9 @@
+- name: set reboot flag
+  set_fact:
+    reboot_required: true
+
+- name: restart containerd service
+  win_service:
+    name: containerd
+    state: restarted
+  when: containerd_service_info.exists | default(false)
