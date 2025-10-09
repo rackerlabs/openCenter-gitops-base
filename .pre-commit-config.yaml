@@ -5,7 +5,7 @@ default_install_hook_types:
 
 repos:
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v4.2.0
+    rev: v4.0.0
     hooks:
       - id: conventional-pre-commit
         stages:
@@ -19,7 +19,7 @@ repos:
         stages:
           - commit-msg
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+    rev: v5.0.0
     hooks:
       - id: end-of-file-fixer
         stages:
@@ -51,25 +51,18 @@ repos:
           - "--unsafe"
       - id: debug-statements
   - repo: https://github.com/psf/black
-    rev: 25.9.0
+    rev: 25.1.0
     hooks:
       - id: black
         stages:
           - manual
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.37.1
+    rev: v1.35.1
     hooks:
       - id: yamllint
         stages:
           - manual
         args:
-          - "-c"
-          - ".yamllint"
-  - repo: https://github.com/ansible-community/ansible-lint
-    rev: v25.9.2
-    hooks:
-      - id: ansible-lint
-        stages:
-          - manual
-        additional_dependencies:
-          - ansible
+          - >-
+            -d {extends: default, rules: {line-length: disable},
+            ignore: [submodules/]}

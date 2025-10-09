@@ -1,15 +1,11 @@
 ---
 extends: default
-
 rules:
   indentation:
     spaces: 2
   line-length: disable
   comments:
     min-spaces-from-content: 1
-  comments-indentation: disable
-  braces:
-    max-spaces-inside: 1
-  octal-values:
-    forbid-implicit-octal: true
-    forbid-explicit-octal: true
+  brackets:
+    forbid: non-empty
+  new-line-at-end-of-file: enable
