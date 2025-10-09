@@ -80,6 +80,11 @@ variable "create_container" {
   default = false
 }
 
+variable "cp_server_group_affinity" {
+  type    = list(string)
+  default = ["soft-anti-affinity"]
+}
+
 variable "csi_enabled" {
   type    = bool
   default = false
