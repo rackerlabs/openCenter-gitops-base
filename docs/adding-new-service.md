@@ -1,4 +1,4 @@
-# Adding a New Service to openCenter GitOps
+# Adding a New Service to openCenter GitOps Base
 
 This guide explains how to add a new service to the openCenter GitOps base repository using the standardized Flux CD patterns. We'll use **cert-manager** as a reference example to illustrate the complete process.
 
