@@ -1,5 +1,5 @@
 resource "openstack_networking_port_v2" "node" {
-  name       = "${var.naming_prefix}${var.node_type}${count.index}"
+  name       = "${substr(var.naming_prefix, 0, 8)}${var.node_type}${count.index}"
   count      = var.node_count
   network_id = var.network_id
 
@@ -18,7 +18,7 @@ resource "openstack_networking_port_v2" "node" {
 }
 
 resource "openstack_compute_instance_v2" "node" {
-  name              = "${var.naming_prefix}${var.node_type}${count.index}"
+  name              = "${substr(var.naming_prefix, 0, 8)}${var.node_type}${count.index}"
   config_drive      = true  # Windows needs config drive
   count             = var.node_count
   flavor_name       = var.flavor_name

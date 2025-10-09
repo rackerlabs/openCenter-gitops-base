@@ -31,6 +31,6 @@ output "secgroup_id_master" {
 }
 
 output "windows_nodes" {
-  value = var.size_worker_windows.count > 0 ? module.node_worker_windows.nodes[*] : []
+  value = var.size_worker_windows.count > 0 ? module.node_worker_windows[0].nodes[*] : []
 }
 
