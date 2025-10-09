@@ -1,0 +1,37 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: rbac-manager
+  namespace: rbac-system
+spec:
+  releaseName: rbac-manager
+  interval: 5m
+  timeout: 10m
+  driftDetection:
+    mode: enabled
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    remediation:
+      retries: 0
+      remediateLastFailure: false
+  targetNamespace: rbac-system
+  chart:
+    spec:
+      chart: rbac-manager
+      version: 1.21.1
+      sourceRef:
+        kind: HelmRepository
+        name: fairwinds-stable
+        namespace: rbac-system
+  valuesFrom:
+    - kind: Secret
+      name: rbac-manager-values-base
+      valuesKey: hardened.yaml
+    - kind: Secret
+      name: rbac-manager-values-override
+      valuesKey: override.yaml
+      optional: true
