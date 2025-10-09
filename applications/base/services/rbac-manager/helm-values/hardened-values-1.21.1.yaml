@@ -1,3 +1,4 @@
+---
 # Hardened values for rbac-manager v1.21.1 (app version v1.9.2)
 # RBAC Manager for automated RBAC management
 # Based on official Fairwinds chart values and documentation
@@ -31,8 +32,8 @@ resources:
     cpu: 100m
     memory: 128Mi
   limits:
-    cpu: 200m # Increased from default 100m for better performance
-    memory: 256Mi # Increased from default 128Mi for stability
+    cpu: 200m
+    memory: 256Mi
 
 # Priority class for system-critical workload
 priorityClassName: "system-cluster-critical"
