@@ -348,6 +348,56 @@ You'll use **SOPS** and **age** to encrypt sensitive YAML files before committin
 
    Avoid leaving decrypted copies on disk.
 
+5. **Create a Kubernetes Secret containing the private key:**
+   Flux needs access to the private age key to decrypt files during reconciliation.
+   Create a Kubernetes Secret in the flux-system namespace containing the private key:
+
+   ```bash
+   kubectl create secret generic --from-file=age.agekey=${HOME}/config/sops/age/${CLUSTER_NAME}_keys.txt sops-age -n flux-system
+   ```
+
+6. **Reference the Secret in your Flux Kustomization:**
+When defining your Flux `Kustomization` resource, add the **decryption** section to reference the secret created above.
+_File: `applications/overlays/<env>/services/fluxcd/cert-manager.yaml`_
+
+    ```bash
+    [...]
+    apiVersion: kustomize.toolkit.fluxcd.io/v1
+    kind: Kustomization
+    metadata:
+      name: cert-manager-override
+      namespace: flux-system
+    spec:
+      dependsOn:
+        - name: cert-manager-base
+          namespace: flux-system
+      interval: 5m
+      retryInterval: 1m
+      timeout: 10m
+      decryption:             ## <==
+        provider: sops        ## <==
+        secretRef:            ## <==
+          name: sops-age      ## <==
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+      path: ./applications/overlays/<env>/services/cert-manager
+      targetNamespace: cert-manager
+      prune: true
+      wait: true
+      healthChecks:
+        - apiVersion: helm.toolkit.fluxcd.io/v2
+          kind: HelmRelease
+          name: cert-manager
+          namespace: cert-manager
+      commonMetadata:
+        labels:
+          app.kubernetes.io/part-of: cert-manager
+          app.kubernetes.io/managed-by: flux
+          opencenter/managed-by: opencenter
+    ```
+
 ---
 
 ## Step 5: Authorize Flux to Read the Base Repository
