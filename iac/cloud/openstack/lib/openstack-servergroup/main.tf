@@ -1,4 +1,4 @@
 resource "openstack_compute_servergroup_v2" "servergroup" {
   name     = "${var.naming_prefix}${var.name}"
-  policies = ["anti-affinity"]
+  policies = var.cp_server_group_affinity
 }

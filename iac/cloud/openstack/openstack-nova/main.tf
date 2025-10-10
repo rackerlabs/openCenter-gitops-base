@@ -155,6 +155,7 @@ module "servergroup_master" {
   source = "../lib/openstack-servergroup"
   name          = "master"
   naming_prefix = var.naming_prefix
+  cp_server_group_affinity       = var.cp_server_group_affinity
 }
 
 module "user_data_ubuntu" {
