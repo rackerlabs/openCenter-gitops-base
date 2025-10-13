@@ -1,0 +1,146 @@
+---
+# configure-disks.yml
+# Production-grade disk configuration with explicit device paths
+# Uses group_vars to define disk_config variable
+# Examplegroup_vars/oc_worker_nodes.yaml:
+# disk_config:
+#   - device: "/dev/vdd"
+#     label: "longhorn-vol"
+#     mountpoint: "/var/lib/longhorn"
+#     filesystem: "ext4"
+#     boot_index: -1
+#     volume_size: 20
+
+
+- name: Configure and mount block devices
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Skip hosts without disk configuration
+      ansible.builtin.meta: end_host
+      when: disk_config is not defined or disk_config | length == 0
+
+    - name: Verify all devices are specified
+      ansible.builtin.assert:
+        that:
+          - item.device is defined
+          - item.device is not none
+          - item.device != ""
+        fail_msg: "Device path missing for {{ item.label }}. Check group_vars configuration."
+      loop: "{{ disk_config }}"
+      loop_control:
+        label: "{{ item.label }}"
+
+    - name: Install filesystem tools
+      ansible.builtin.package:
+        name:
+          - xfsprogs
+          - e2fsprogs
+        state: present
+
+    - name: Display configuration
+      ansible.builtin.debug:
+        msg: "{{ item.device }} -> {{ item.mountpoint }} ({{ item.label }}, {{ item.filesystem }})"
+      loop: "{{ disk_config }}"
+
+    - name: Verify devices exist
+      ansible.builtin.stat:
+        path: "{{ item.device }}"
+      register: device_checks
+      failed_when: not device_checks.stat.exists or not device_checks.stat.isblk
+      loop: "{{ disk_config }}"
+      loop_control:
+        label: "{{ item.device }}"
+
+    - name: Check existing labels
+      ansible.builtin.command: blkid -s LABEL -o value {{ item.device }}
+      register: existing_labels
+      changed_when: false
+      failed_when: false
+      loop: "{{ disk_config }}"
+      loop_control:
+        label: "{{ item.device }}"
+
+    - name: Format filesystems
+      community.general.filesystem:
+        fstype: "{{ item.item.filesystem }}"
+        dev: "{{ item.item.device }}"
+        opts: "-L {{ item.item.label }}"
+        force: false
+      loop: "{{ existing_labels.results }}"
+      loop_control:
+        label: "{{ item.item.device }} -> {{ item.item.label }}"
+      when: item.rc != 0 or item.stdout != item.item.label
+
+    - name: Get UUIDs
+      ansible.builtin.command: blkid -s UUID -o value {{ item.device }}
+      register: uuids
+      changed_when: false
+      retries: 3
+      delay: 1
+      until: uuids.rc == 0
+      loop: "{{ disk_config }}"
+      loop_control:
+        label: "{{ item.device }}"
+
+    - name: Create mount points
+      ansible.builtin.file:
+        path: "{{ item.item.mountpoint }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ uuids.results }}"
+      loop_control:
+        label: "{{ item.item.mountpoint }}"
+
+    - name: Mount filesystems
+      ansible.posix.mount:
+        path: "{{ item.item.mountpoint }}"
+        src: "UUID={{ item.stdout }}"
+        fstype: "{{ item.item.filesystem }}"
+        opts: defaults,nofail
+        state: mounted
+        dump: '0'
+        passno: '2'
+      loop: "{{ uuids.results }}"
+      loop_control:
+        label: "{{ item.item.mountpoint }}"
+
+    - name: Verify fstab entries
+      ansible.builtin.shell: grep "{{ item.mountpoint }}" /etc/fstab || echo "MISSING"
+      register: fstab_check
+      changed_when: false
+      loop: "{{ disk_config }}"
+      loop_control:
+        label: "{{ item.mountpoint }}"
+
+    - name: Display fstab status
+      ansible.builtin.debug:
+        msg: "{{ item.item.mountpoint }}: {{ 'Present' if 'UUID' in item.stdout else 'MISSING - Something went wrong!' }}"
+      loop: "{{ fstab_check.results }}"
+      loop_control:
+        label: "{{ item.item.mountpoint }}"
+
+    - name: Verify mounts
+      ansible.builtin.command: findmnt {{ item.mountpoint }}
+      changed_when: false
+      loop: "{{ disk_config }}"
+      loop_control:
+        label: "{{ item.mountpoint }}"
+
+    - name: Show results
+      ansible.builtin.shell: |
+        lsblk -f {{ disk_config | map(attribute='device') | join(' ') }}
+        echo ""
+        df -h {{ disk_config | map(attribute='mountpoint') | join(' ') }}
+      register: result
+      changed_when: false
+
+    - name: Display
+      ansible.builtin.debug:
+        msg: "{{ result.stdout_lines }}"
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg: "✓ Successfully configured {{ disk_config | length }} disk(s) on {{ inventory_hostname }}"
