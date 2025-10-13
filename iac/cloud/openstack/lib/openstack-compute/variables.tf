@@ -1,3 +1,19 @@
+variable "additional_block_devices" {
+  description = "List of additional block devices to attach to instances"
+  type = list(object({
+    source_type           = string           # "blank", "image", "volume", "snapshot"
+    volume_size           = number
+    volume_type           = optional(string, "")
+    boot_index            = number           # Must be > 0 for non-boot devices
+    destination_type      = optional(string, "volume")
+    delete_on_termination = optional(bool, true)
+    mountpoint            = string
+    filesystem            = optional(string, "ext4")
+    label                 = string
+  }))
+  default = []
+}
+
 variable "allowed_addresses" {
   type    = list(string)
   default = []

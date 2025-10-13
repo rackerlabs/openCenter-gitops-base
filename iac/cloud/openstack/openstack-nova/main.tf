@@ -64,6 +64,7 @@ module "node_master" {
   source = "../lib/openstack-compute"
 
   depends_on                     = [module.bastion, module.ssh-keypair, module.secgroup]
+  additional_block_devices       = var.additional_block_devices_master
   availability_zone              = var.availability_zone
   allowed_addresses              = [var.vrrp_ip ,var.subnet_nodes, var.subnet_pods, var.subnet_services]
   flavor_name                    = var.size_master.flavor
@@ -92,6 +93,7 @@ module "node_worker" {
   source = "../lib/openstack-compute"
 
   depends_on                     = [module.bastion, module.ssh-keypair, module.secgroup]
+  additional_block_devices       = var.additional_block_devices_worker 
   availability_zone              = var.availability_zone
   allowed_addresses              = [var.subnet_nodes, var.subnet_pods, var.subnet_services]
   flavor_name                    = var.size_worker.flavor

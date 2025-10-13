@@ -42,6 +42,19 @@ resource "openstack_compute_instance_v2" "node" {
     destination_type      = var.node_bfv_destination_type
     delete_on_termination = var.node_bfv_delete_on_termination
   }
+  
+  dynamic "block_device" {
+    for_each = var.additional_block_devices
+    content {
+      uuid                  = block_device.value.source_type == "blank" ? "" : null
+      source_type           = block_device.value.source_type
+      volume_size           = block_device.value.volume_size
+      volume_type           = block_device.value.destination_type == "local" ? "" : block_device.value.volume_type
+      boot_index            = block_device.value.boot_index
+      destination_type      = block_device.value.destination_type
+      delete_on_termination = block_device.value.delete_on_termination
+    }
+  }
 
   network {
     port = openstack_networking_port_v2.node[count.index].id
