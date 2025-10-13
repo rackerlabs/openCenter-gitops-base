@@ -1,0 +1,9 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: longhorn-repo
+  namespace: longhorn-system
+spec:
+  interval: 10m # How often to check for updates to the repo index
+  url: https://charts.longhorn.io
