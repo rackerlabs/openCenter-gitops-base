@@ -4,7 +4,7 @@ kind: Kustomization
 namespace: ingress-nginx
 resources:
   - "namespace.yaml"
-  - "/source.yaml"
+  - "source.yaml"
   - "helmrelease.yaml"
 secretGenerator:
   - name: ingress-nginx-values-base
