@@ -118,6 +118,18 @@ variable "cp_server_group_affinity" {
   description = "Set the Affinity Policy for the control plane server group"
 }
 
+variable "wn_server_group_affinity" {
+  type    = list(string)
+  default = []
+  description = "Set the Affinity Policy for the control plane server group"
+}
+
+variable "win_server_group_affinity" {
+  type    = list(string)
+  default = []
+  description = "Set the Affinity Policy for the control plane server group"
+}
+
 variable "csi_enabled" {
   type    = bool
   default = false

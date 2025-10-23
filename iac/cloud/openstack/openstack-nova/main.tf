@@ -104,6 +104,7 @@ module "node_worker" {
   node_count                     = var.size_worker.count
   node_type                      = var.node_worker == "" ? "worker" : var.node_worker
   security_group_ids             = [module.secgroup.worker_id]
+  servergroup_id                 = length(var.wn_server_group_affinity) > 0 ? module.servergroup_worker[0].id : ""
   subnet_id                      = var.subnet_id == "" ? openstack_networking_subnet_v2.subnet[0].id : var.subnet_id
   user_data                      = module.user_data_ubuntu.rendered
   pf9_onboard                    = var.pf9_onboard
@@ -131,6 +132,7 @@ module "node_worker_windows" {
   node_count          = var.size_worker_windows.count
   node_type           = var.node_worker_windows == "" ? "win_wn" : var.node_worker_windows
   security_group_ids  = [module.secgroup.worker_windows_id]
+  servergroup_id      = length(var.win_server_group_affinity) > 0 ? module.servergroup_windows[0].id : ""
   subnet_id           = var.subnet_id == "" ? openstack_networking_subnet_v2.subnet[0].id : var.subnet_id
   user_data           = module.user_data_windows[0].rendered
   node_bfv_size       = var.worker_node_bfv_size_windows
@@ -155,10 +157,27 @@ module "secgroup" {
 
 module "servergroup_master" {
   source = "../lib/openstack-servergroup"
-  name          = "master"
-  naming_prefix = var.naming_prefix
-  cp_server_group_affinity       = var.cp_server_group_affinity
+  name                        = "master"
+  naming_prefix               = var.naming_prefix
+  server_group_affinity       = var.cp_server_group_affinity
 }
+
+module "servergroup_worker" {
+  source = "../lib/openstack-servergroup"
+  count                       = length(var.wn_server_group_affinity) > 0 ? 1 : 0
+  name                        = "worker"
+  naming_prefix               = var.naming_prefix
+  server_group_affinity       = var.wn_server_group_affinity
+}
+
+module "servergroup_windows" {
+  source = "../lib/openstack-servergroup"
+  count                       = length(var.win_server_group_affinity) > 0 ? 1 : 0
+  name                        = "windows"
+  naming_prefix               = var.naming_prefix
+  server_group_affinity       = var.win_server_group_affinity
+}
+
 
 module "user_data_ubuntu" {
   source = "../lib/user_data-ubuntu"
