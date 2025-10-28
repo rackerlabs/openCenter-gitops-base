@@ -8,6 +8,6 @@ resources:
 secretGenerator:
   - name: kyverno-values-base
     type: Opaque
-    files: [hardened.yaml=helm-values/hardened-values-3.5.2.yaml]
+    files: [hardened.yaml=helm-values/hardened-values-3.6.0.yaml]
     options:
       disableNameSuffixHash: true

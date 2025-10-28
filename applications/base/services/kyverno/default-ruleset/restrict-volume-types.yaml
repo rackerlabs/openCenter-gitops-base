@@ -1,0 +1,64 @@
+---
+# Source: kyverno-policies/templates/restricted/restrict-volume-types.yaml
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-volume-types
+  annotations:
+    policies.kyverno.io/title: Restrict Volume Types
+    policies.kyverno.io/category: Pod Security Standards (Restricted)
+    policies.kyverno.io/severity: "high"
+    policies.kyverno.io/subject: Pod,Volume
+    policies.kyverno.io/minversion: 1.6.0
+    kyverno.io/kubernetes-version: ">=1.25.0-0"
+    kyverno.io/kyverno-version: v1.15.2
+    policies.kyverno.io/description: >-
+      In addition to restricting HostPath volumes, the restricted pod security profile
+      limits usage of non-core volume types to those defined through PersistentVolumes.
+      This policy blocks any other type of volume other than those in the allow list.
+
+  labels:
+    app.kubernetes.io/component: kyverno
+    app.kubernetes.io/instance: kyverno-policies
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kyverno-policies
+    app.kubernetes.io/part-of: kyverno-policies
+    app.kubernetes.io/version: "3.5.2"
+    helm.sh/chart: kyverno-policies-3.5.2
+spec:
+  background: true
+  failurePolicy: Ignore
+  rules:
+    - name: restricted-volumes
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      preconditions:
+        all:
+          - key: "{{ request.operation || 'BACKGROUND' }}"
+            operator: NotEquals
+            value: DELETE
+      validate:
+        failureAction: Audit
+        allowExistingViolations: true
+        message: >-
+          Only the following types of volumes may be used: configMap, csi, downwardAPI,
+          emptyDir, ephemeral, persistentVolumeClaim, projected, and secret.
+        deny:
+          conditions:
+            all:
+              - key: "{{ request.object.spec.volumes[].keys(@)[] || '' }}"
+                operator: AnyNotIn
+                value:
+                  - name
+                  - configMap
+                  - csi
+                  - downwardAPI
+                  - emptyDir
+                  - ephemeral
+                  - persistentVolumeClaim
+                  - projected
+                  - secret
+                  - ""

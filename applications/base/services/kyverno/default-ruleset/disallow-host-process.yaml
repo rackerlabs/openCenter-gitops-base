@@ -1,0 +1,59 @@
+---
+# Source: kyverno-policies/templates/baseline/disallow-host-process.yaml
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-host-process
+  annotations:
+    policies.kyverno.io/title: Disallow hostProcess
+    policies.kyverno.io/category: Pod Security Standards (Baseline)
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    kyverno.io/kyverno-version: v1.16.0
+    kyverno.io/kubernetes-version: ">=1.25.0-0"
+    policies.kyverno.io/description: >-
+      Windows pods offer the ability to run HostProcess containers which enables privileged
+      access to the Windows node. Privileged access to the host is disallowed in the baseline
+      policy. HostProcess pods are an alpha feature as of Kubernetes v1.22. This policy ensures
+      the `hostProcess` field, if present, is set to `false`.
+    
+  labels: 
+    app.kubernetes.io/component: kyverno
+    app.kubernetes.io/instance: kyverno-policies
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kyverno-policies
+    app.kubernetes.io/part-of: kyverno-policies
+    app.kubernetes.io/version: "3.6.0"
+    helm.sh/chart: kyverno-policies-3.6.0
+spec:
+  background: true
+  failurePolicy: Ignore
+  rules:
+    - name: host-process-containers
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        failureAction: Audit
+        allowExistingViolations: true
+        message: >-
+          HostProcess containers are disallowed. The fields spec.securityContext.windowsOptions.hostProcess,
+          spec.containers[*].securityContext.windowsOptions.hostProcess, spec.initContainers[*].securityContext.windowsOptions.hostProcess,
+          and spec.ephemeralContainers[*].securityContext.windowsOptions.hostProcess must either be undefined
+          or set to `false`.
+        pattern:
+          spec:
+            =(ephemeralContainers):
+              - =(securityContext):
+                  =(windowsOptions):
+                    =(hostProcess): "false"
+            =(initContainers):
+              - =(securityContext):
+                  =(windowsOptions):
+                    =(hostProcess): "false"
+            containers:
+              - =(securityContext):
+                  =(windowsOptions):
+                    =(hostProcess): "false"
