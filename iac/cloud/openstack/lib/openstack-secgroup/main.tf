@@ -162,12 +162,12 @@ resource "openstack_networking_secgroup_rule_v2" "worker_ipv6" {
 
 
 resource "openstack_networking_secgroup_v2" "worker_windows" {
-  count = var.worker_count_windows > 0 ? 1 : 0
+  count = var.worker_count_windows > 0 ? 1 : (length(var.additional_server_pools_worker_windows) > 0 ? 1 : 0)
   name = "${var.naming_prefix}worker-windows"
 }
 
 resource "openstack_networking_secgroup_rule_v2" "worker_windows_nodeport_ipv4" {
-  count             = var.worker_count_windows > 0 ? 1 : 0
+  count             = var.worker_count_windows > 0 ? 1 : (length(var.additional_server_pools_worker_windows) > 0 ? 1 : 0)
   direction         = "ingress"
   ethertype         = "IPv4"
   port_range_min    = 30000
@@ -178,7 +178,7 @@ resource "openstack_networking_secgroup_rule_v2" "worker_windows_nodeport_ipv4" 
 }
 
 resource "openstack_networking_secgroup_rule_v2" "controlplane_ipv4_windows" {
-  count             = var.worker_count_windows > 0 ? 1 : 0
+  count             = var.worker_count_windows > 0 ? 1 : (length(var.additional_server_pools_worker_windows) > 0 ? 1 : 0)
   direction         = "ingress"
   ethertype         = "IPv4"
   remote_group_id   = openstack_networking_secgroup_v2.worker_windows[0].id
@@ -186,7 +186,7 @@ resource "openstack_networking_secgroup_rule_v2" "controlplane_ipv4_windows" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "rdp_ipv4" {
-  count             = var.worker_count_windows > 0 ? 1 : 0
+  count             = var.worker_count_windows > 0 ? 1 : (length(var.additional_server_pools_worker_windows) > 0 ? 1 : 0)
   direction         = "ingress"
   ethertype         = "IPv4"
   remote_ip_prefix  = "0.0.0.0/0"
@@ -197,7 +197,7 @@ resource "openstack_networking_secgroup_rule_v2" "rdp_ipv4" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "rdp_ipv6" {
-  count             = var.worker_count_windows > 0 ? 1 : 0
+  count             = var.worker_count_windows > 0 ? 1 : (length(var.additional_server_pools_worker_windows) > 0 ? 1 : 0)
   direction         = "ingress"
   ethertype         = "IPv6"
   remote_ip_prefix  = "::/0"
@@ -208,7 +208,7 @@ resource "openstack_networking_secgroup_rule_v2" "rdp_ipv6" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "worker_windows_int_ipv4" {
-  count             = var.worker_count_windows > 0 ? 1 : 0
+  count             = var.worker_count_windows > 0 ? 1 : (length(var.additional_server_pools_worker_windows) > 0 ? 1 : 0)
   direction         = "ingress"
   ethertype         = "IPv4"
   remote_group_id   = openstack_networking_secgroup_v2.worker_windows[0].id
@@ -216,7 +216,7 @@ resource "openstack_networking_secgroup_rule_v2" "worker_windows_int_ipv4" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "worker_windows_int_ipv6" {
-  count             = var.worker_count_windows > 0 ? 1 : 0
+  count             = var.worker_count_windows > 0 ? 1 : (length(var.additional_server_pools_worker_windows) > 0 ? 1 : 0)
   direction         = "ingress"
   ethertype         = "IPv6"
   remote_group_id   = openstack_networking_secgroup_v2.worker_windows[0].id
@@ -224,7 +224,7 @@ resource "openstack_networking_secgroup_rule_v2" "worker_windows_int_ipv6" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "winrm_ipv4" {
-  count             = var.worker_count_windows > 0 ? 1 : 0
+  count             = var.worker_count_windows > 0 ? 1 : (length(var.additional_server_pools_worker_windows) > 0 ? 1 : 0)
   direction         = "ingress"
   ethertype         = "IPv4"
   remote_ip_prefix  = var.subnet_servers
@@ -235,7 +235,7 @@ resource "openstack_networking_secgroup_rule_v2" "winrm_ipv4" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "ssh_ipv4" {
-  count             = var.worker_count_windows > 0 ? 1 : 0
+  count             = var.worker_count_windows > 0 ? 1 : (length(var.additional_server_pools_worker_windows) > 0 ? 1 : 0)
   direction         = "ingress"
   ethertype         = "IPv4"
   remote_ip_prefix  = "0.0.0.0/0"
@@ -246,7 +246,7 @@ resource "openstack_networking_secgroup_rule_v2" "ssh_ipv4" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "ssh_ipv6" {
-  count             = var.worker_count_windows > 0 ? 1 : 0
+  count             = var.worker_count_windows > 0 ? 1 : (length(var.additional_server_pools_worker_windows) > 0 ? 1 : 0)
   direction         = "ingress"
   ethertype         = "IPv6"
   remote_ip_prefix  = "::/0"
@@ -257,7 +257,7 @@ resource "openstack_networking_secgroup_rule_v2" "ssh_ipv6" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "worker_windows_nodes_ipv4" {
-  count             = var.worker_count_windows > 0 ? 1 : 0
+  count             = var.worker_count_windows > 0 ? 1 : (length(var.additional_server_pools_worker_windows) > 0 ? 1 : 0)
   direction         = "ingress"
   ethertype         = "IPv4"
   port_range_min    = 0

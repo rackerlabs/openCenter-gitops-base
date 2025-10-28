@@ -120,7 +120,7 @@ module "node_worker" {
 
 module "node_worker_windows" {
   source = "../lib/openstack-compute-windows"
-  count               = var.size_worker_windows.count > 0 ? 1 : 0
+  # count               = var.size_worker_windows.count > 0 ? 1 : 0
   depends_on          = [module.bastion, module.secgroup]
   availability_zone   = var.availability_zone
   allowed_addresses   = [var.subnet_nodes, var.subnet_pods, var.subnet_services]
@@ -135,8 +135,11 @@ module "node_worker_windows" {
   servergroup_id      = length(var.win_server_group_affinity) > 0 ? module.servergroup_windows[0].id : ""
   subnet_id           = var.subnet_id == "" ? openstack_networking_subnet_v2.subnet[0].id : var.subnet_id
   user_data           = module.user_data_windows[0].rendered
-  node_bfv_size       = var.worker_node_bfv_size_windows
-  node_bfv_type       = var.worker_node_bfv_type_windows
+  node_bfv_source_type           = var.worker_node_bfv_source_type
+  node_bfv_destination_type      = var.worker_node_bfv_destination_type
+  node_bfv_volume_size           = var.worker_node_bfv_volume_size
+  node_bfv_delete_on_termination = var.worker_node_bfv_delete_on_termination
+  node_bfv_volume_type           = var.worker_node_bfv_volume_type
 }
 
 module "secgroup" {
@@ -151,6 +154,7 @@ module "secgroup" {
   k8s_api_port            = var.k8s_api_port
   disable_bastion         = var.disable_bastion
   worker_count_windows    = var.size_worker_windows.count
+  additional_server_pools_worker_windows = var.additional_server_pools_worker_windows
   vrrp_enabled            = var.vrrp_enabled
   k8s_api_port_acl        = var.k8s_api_port_acl
 }
@@ -209,7 +213,7 @@ module "user_data_bastion" {
 
 module "user_data_windows" {
   source = "../lib/user_data-windows"
-  count               = var.size_worker_windows.count > 0 ? 1 : 0
+  count               = var.size_worker_windows.count > 0 ? 1 : (length(var.additional_server_pools_worker_windows) > 0 ? 1 : 0)
   ca_certificates     = join("\n", [var.openstack_ca, (var.services_ca_enabled == true ? module.ca.certificate : ""), var.ca_certificates])
   ssh_authorized_keys = concat(var.ssh_authorized_keys, [module.ssh-keypair.keypair.public_key])
   ntp_servers         = var.ntp_servers
@@ -226,4 +230,108 @@ module "ansible_inventory" {
   worker_nodes    = module.node_worker.nodes
   master_nodes    = module.node_master.nodes
   ssh_user        = var.ssh_user
+}
+
+# Server groups for additional worker pools - always created for each pool
+module "servergroup_additional_worker_pools" {
+  source   = "../lib/openstack-servergroup"
+  for_each = { for pool in var.additional_server_pools_worker : pool.name => pool }
+
+  naming_prefix = var.naming_prefix
+  name          = "${each.value.name}-worker"
+  server_group_affinity =    length(each.value.server_group_affinity) > 0 ? [each.value.server_group_affinity] : ["soft-anti-affinity"]
+}
+
+module "additional_worker_pools" {
+  source   = "../lib/openstack-compute"
+  for_each = { for pool in var.additional_server_pools_worker : pool.name => pool }
+
+  depends_on = [module.bastion, module.ssh-keypair, module.secgroup]
+
+  # Basic configuration
+  availability_zone   = var.availability_zone
+  naming_prefix       = var.naming_prefix
+  ssh_user            = var.ssh_user
+
+  # Network configuration
+  network_id = var.network_id == "" ? openstack_networking_network_v2.network[0].id : var.network_id
+  subnet_id  = length(each.value.subnet_id) > 0 ? each.value.subnet_id : (var.subnet_id == "" ? openstack_networking_subnet_v2.subnet[0].id : var.subnet_id)
+
+  # Node-specific configuration from the variable
+  node_count        = each.value.worker_count
+  node_type         = each.value.node_worker
+  flavor_name       = each.value.flavor_worker
+  image_id          = each.value.image_id
+  image_name        = each.value.image_name
+  allowed_addresses = [var.subnet_nodes, var.subnet_pods, var.subnet_services]
+
+  # Boot from volume configuration
+  node_bfv_volume_size           = each.value.worker_node_bfv_volume_size
+  node_bfv_destination_type      = each.value.worker_node_bfv_destination_type
+  node_bfv_source_type           = each.value.worker_node_bfv_source_type
+  node_bfv_volume_type           = each.value.worker_node_bfv_volume_type
+  node_bfv_delete_on_termination = each.value.worker_node_bfv_delete_on_termination
+
+  # Additional block devices
+  additional_block_devices = each.value.additional_block_devices_worker
+
+  # Security and server group configuration - each pool gets its own server group
+  security_group_ids = [module.secgroup.worker_id]
+  servergroup_id     = module.servergroup_additional_worker_pools[each.key].id
+
+  # User data and bastion configuration
+  user_data           = module.user_data_ubuntu.rendered
+  pf9_onboard         = each.value.pf9_onboard
+  key_pair            = module.ssh-keypair.keypair
+
+}
+
+# Server groups for additional Windows worker pools - always created for each pool
+module "servergroup_additional_worker_pools_windows" {
+  source   = "../lib/openstack-servergroup"
+  for_each = { for pool in var.additional_server_pools_worker_windows : pool.name => pool }
+
+  naming_prefix = var.naming_prefix
+  name          = "${each.value.name}-worker-windows"
+  server_group_affinity      = each.value.server_group_affinity != "" ? [each.value.server_group_affinity] : ["soft-anti-affinity"]
+}
+
+module "additional_worker_pools_windows" {
+  source   = "../lib/openstack-compute-windows"
+  for_each = { for pool in var.additional_server_pools_worker_windows : pool.name => pool }
+
+  depends_on = [module.bastion, module.secgroup]
+
+  # Basic configuration
+  availability_zone = var.availability_zone
+  naming_prefix     = var.naming_prefix
+
+  # Network configuration
+  network_id = var.network_id == "" ? openstack_networking_network_v2.network[0].id : var.network_id
+  subnet_id  = length(each.value.subnet_id) > 0 ? each.value.subnet_id : (var.subnet_id == "" ? openstack_networking_subnet_v2.subnet[0].id : var.subnet_id)
+
+  # Node-specific configuration from the variable
+  node_count        = each.value.worker_count
+  node_type         = each.value.node_worker
+  flavor_name       = each.value.flavor_worker
+  image_id          = each.value.image_id
+  image_name        = each.value.image_name
+  allowed_addresses = length(each.value.allowed_addresses) > 0 ? each.value.allowed_addresses : [var.subnet_nodes, var.subnet_pods, var.subnet_services]
+
+  # Boot from volume configuration (Windows uses different parameter names)
+  node_bfv_volume_size           = each.value.worker_node_bfv_volume_size
+  node_bfv_destination_type      = each.value.worker_node_bfv_destination_type
+  node_bfv_source_type           = each.value.worker_node_bfv_source_type
+  node_bfv_volume_type           = each.value.worker_node_bfv_volume_type
+  node_bfv_delete_on_termination = each.value.worker_node_bfv_delete_on_termination
+
+  # Additional block devices
+  additional_block_devices = each.value.additional_block_devices_worker_windows
+
+  # Security and server group configuration - each pool gets its own server group
+  security_group_ids = [module.secgroup.worker_windows_id]
+  servergroup_id     = module.servergroup_additional_worker_pools_windows[each.key].id
+
+  # User data configuration
+  user_data = module.user_data_windows[0].rendered
 }
