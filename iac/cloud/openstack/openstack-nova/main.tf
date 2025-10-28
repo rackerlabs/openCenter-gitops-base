@@ -139,7 +139,7 @@ module "node_worker_windows" {
   security_group_ids             = [module.secgroup.worker_windows_id]
   servergroup_id                 = length(var.win_server_group_affinity) > 0 ? module.servergroup_windows[0].id : ""
   subnet_id                      = var.subnet_id == "" ? openstack_networking_subnet_v2.subnet[0].id : var.subnet_id
-  user_data                      = module.user_data_windows[0].rendered
+  user_data                      = local.windows_enabled == 1 ? module.user_data_windows[0].rendered : ""
   node_bfv_source_type           = var.worker_node_bfv_source_type
   node_bfv_destination_type      = var.worker_node_bfv_destination_type
   node_bfv_volume_size           = var.worker_node_bfv_volume_size
