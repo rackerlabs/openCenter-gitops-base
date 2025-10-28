@@ -1,3 +1,8 @@
+locals {
+  windows_enabled = var.size_worker_windows.count > 0 || length(var.additional_server_pools_worker_windows) > 0
+}
+
+
 module "bastion" {
   source = "../lib/openstack-bastion"
   count  = var.disable_bastion == true ? 0 : 1
@@ -134,7 +139,7 @@ module "node_worker_windows" {
   security_group_ids             = [module.secgroup.worker_windows_id]
   servergroup_id                 = length(var.win_server_group_affinity) > 0 ? module.servergroup_windows[0].id : ""
   subnet_id                      = var.subnet_id == "" ? openstack_networking_subnet_v2.subnet[0].id : var.subnet_id
-  user_data                      = module.user_data_windows.rendered
+  user_data                      = module.user_data_windows[0].rendered
   node_bfv_source_type           = var.worker_node_bfv_source_type
   node_bfv_destination_type      = var.worker_node_bfv_destination_type
   node_bfv_volume_size           = var.worker_node_bfv_volume_size
@@ -213,7 +218,7 @@ module "user_data_bastion" {
 
 module "user_data_windows" {
   source                 = "../lib/user_data-windows"
-  count                  = var.size_worker_windows.count > 0 ? 1 : (length(var.additional_server_pools_worker_windows) > 0 ? 1 : 0)
+  count                  = local.windows_enabled == true ? 1 : 0
   ca_certificates        = join("\n", [var.openstack_ca, (var.services_ca_enabled == true ? module.ca.certificate : ""), var.ca_certificates])
   ssh_authorized_keys    = concat(var.ssh_authorized_keys, [module.ssh-keypair.keypair.public_key])
   ntp_servers            = var.ntp_servers
