@@ -30,7 +30,7 @@ alertmanager:
           matchers: [severity =~ "warning"]
         - receiver: alert_proxy_receiver
           continue: false
-          matchers: [severity =~ "critical']
+          matchers: [severity =~ "critical"]
     receivers:
       - name: "null"
       - name: warning_alerts_receiver
