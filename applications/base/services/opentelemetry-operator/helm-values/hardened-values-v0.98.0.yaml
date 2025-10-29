@@ -1,0 +1,163 @@
+# Hardened values for OpenTelemetry Operator v0.98.0
+# Security-focused configuration following openCenter standards
+
+# High availability configuration
+replicaCount: 2
+
+# Pod Disruption Budget for high availability
+pdb:
+  create: true
+  minAvailable: 1
+
+# Manager configuration with security hardening
+manager:
+  image:
+    repository: ghcr.io/open-telemetry/opentelemetry-operator/opentelemetry-operator
+    imagePullPolicy: IfNotPresent
+  
+  # Collector image configuration
+  collectorImage:
+    repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s
+    tag: 0.137.0
+
+  # Resource limits for production workloads
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+      ephemeral-storage: 100Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+      ephemeral-storage: 50Mi
+
+  # Environment variables
+  env:
+    ENABLE_WEBHOOKS: "true"
+
+  # ServiceAccount configuration
+  serviceAccount:
+    create: true
+    annotations: {}
+
+  # Enable Prometheus monitoring
+  serviceMonitor:
+    enabled: true
+    extraLabels: {}
+    annotations: {}
+    metricsEndpoints:
+      - port: metrics
+
+  # Enable leader election for HA
+  leaderElection:
+    enabled: true
+
+  # Security context - hardened configuration
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    seccompProfile:
+      type: RuntimeDefault
+
+# Kube RBAC Proxy configuration
+kubeRBACProxy:
+  enabled: true
+  image:
+    repository: quay.io/brancz/kube-rbac-proxy
+    tag: v0.19.1
+  
+  # Resource limits
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+  # Security context - hardened configuration
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    seccompProfile:
+      type: RuntimeDefault
+
+# Admission webhooks configuration
+admissionWebhooks:
+  create: true
+  servicePort: 443
+  failurePolicy: Fail
+  
+  # Pod injection policy
+  pods:
+    failurePolicy: Ignore
+  
+  # Webhook timeout
+  timeoutSeconds: 10
+
+  # Use cert-manager for TLS certificates
+  certManager:
+    enabled: true
+    certificateAnnotations: {}
+    issuerAnnotations: {}
+
+  # Disable auto-generated certificates since we use cert-manager
+  autoGenerateCert:
+    enabled: false
+
+# CRDs management
+crds:
+  create: true
+
+# RBAC configuration
+role:
+  create: true
+
+clusterRole:
+  create: true
+
+# Node scheduling - Linux nodes only
+nodeSelector:
+  kubernetes.io/os: linux
+
+# Pod-level security context
+securityContext:
+  runAsGroup: 65532
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+
+# Service account token mounting
+automountServiceAccountToken: true
+
+# Test framework security hardening
+testFramework:
+  image:
+    repository: busybox
+    tag: latest
+  
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    seccompProfile:
+      type: RuntimeDefault
+  
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
