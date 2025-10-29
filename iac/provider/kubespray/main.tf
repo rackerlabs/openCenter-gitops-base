@@ -46,7 +46,7 @@ resource "local_file" "k8s_cluster" {
       kube_oidc_auth_enabled    = var.kube_oidc_auth_enabled
       kube_oidc_url             = var.kube_oidc_url
       kube_oidc_client_id       = var.kube_oidc_client_id
-      kube_oidc_ca_file         = var.kube_oidc_ca_file == "" ? "{{ kube_cert_dir }}/ca.pem" : ""
+      kube_oidc_ca_file         = var.kube_oidc_ca_file == "" ? "{{ kube_cert_dir }}/ca.pem" : var.kube_oidc_ca_file
       kube_oidc_username_claim  = var.kube_oidc_username_claim
       kube_oidc_username_prefix = var.kube_oidc_username_prefix
       kube_oidc_groups_claim    = var.kube_oidc_groups_claim
