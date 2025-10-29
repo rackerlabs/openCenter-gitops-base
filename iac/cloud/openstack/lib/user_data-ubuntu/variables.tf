@@ -69,12 +69,12 @@ variable "pf9ctl_setup_download_url" {
 }
 
 variable "reboot" {
-  type = bool
+  type    = bool
   default = false
-  
+
 }
 
 variable "ub_version" {
-  type = string
+  type    = string
   default = ""
 }

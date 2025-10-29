@@ -31,6 +31,19 @@ output "secgroup_id_master" {
 }
 
 output "windows_nodes" {
-  value = var.size_worker_windows.count > 0 ? module.node_worker_windows[0].nodes[*] : []
+  value = var.size_worker_windows.count > 0 ? module.node_worker_windows.nodes[*] : []
 }
 
+output "additional_worker_pools_nodes" {
+  description = "Map of additional worker pool names to their node objects"
+  value = {
+    for pool_name, pool_module in module.additional_worker_pools : pool_name => pool_module.nodes[*]
+  }
+}
+
+output "additional_worker_pools_windows_nodes" {
+  description = "Map of additional Windows worker pool names to their node objects"
+  value = {
+    for pool_name, pool_module in module.additional_worker_pools_windows : pool_name => pool_module.nodes[*]
+  }
+}

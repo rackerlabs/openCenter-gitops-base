@@ -15,5 +15,6 @@ output "worker_id" {
 }
 
 output "worker_windows_id" {
-  value = var.worker_count_windows > 0 ? openstack_networking_secgroup_v2.worker_windows[0].id : ""
+  value = var.worker_count_windows > 0 ? openstack_networking_secgroup_v2.worker_windows[0].id : (length(var.additional_server_pools_worker_windows) > 0 ? openstack_networking_secgroup_v2.worker_windows[0].id : "")
 }
+
