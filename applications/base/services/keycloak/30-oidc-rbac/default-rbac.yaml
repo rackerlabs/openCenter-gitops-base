@@ -215,6 +215,5 @@ rbacBindings:
     subjects:
       - kind: Group
         name: "oidc:k8s-ops"
-        apiGroup: rbac.authorization.k8s.io
     clusterRoleBindings:
       - clusterRole: k8s-ops
