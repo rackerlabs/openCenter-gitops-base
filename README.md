@@ -29,6 +29,7 @@ applications/
 | **kube-prometheus-stack** | Core Service | `observability` | Complete monitoring and alerting stack |
 | **metallb** | Core Service | `metallb-system` | Bare metal load balancer |
 | **olm** | Core Service | `olm` | Operator Lifecycle Manager |
+| **opentelemetry-operator** | Core Service | `observability` | OpenTelemetry operator for auto-instrumentation |
 | **sealed-secrets** | Core Service | `sealed-secrets` | Encrypted secrets management |
 | **velero** | Core Service | `velero` | Cluster backup and disaster recovery |
 | **alert-proxy** | Managed Service | `rackspace` | Rackspace alert aggregation |
@@ -102,6 +103,17 @@ applications/
   - Operator installation and management
   - Dependency resolution
   - Automatic updates
+
+#### **opentelemetry-operator**
+- **Purpose**: OpenTelemetry operator for auto-instrumentation and collector management
+- **Source**: OpenTelemetry Helm repository (`https://open-telemetry.github.io/opentelemetry-helm-charts`)
+- **Namespace**: `observability`
+- **Features**:
+  - Automatic OpenTelemetry instrumentation injection
+  - OpenTelemetry Collector deployment and management
+  - Custom resource definitions for OpenTelemetry configuration
+  - Webhook-based sidecar injection
+  - Multi-language auto-instrumentation support (Java, Node.js, Python, .NET, Go)
 
 #### **sealed-secrets**
 - **Purpose**: Encrypted secrets management
