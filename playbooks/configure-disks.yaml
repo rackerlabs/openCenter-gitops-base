@@ -2,7 +2,7 @@
 # configure-disks.yml
 # Production-grade disk configuration with explicit device paths
 # Uses group_vars to define disk_config variable
-# Examplegroup_vars/oc_worker_nodes.yaml:
+# Example group_vars/oc_worker_nodes.yaml:
 # disk_config:
 #   - device: "/dev/vdd"
 #     label: "longhorn-vol"

@@ -1,5 +1,5 @@
 locals {
-  ssh_key_path     = var.ssh_key_path == "" ? "${path.cwd}/id_rsa" : var.ssh_key_path
+  ssh_key_path          = var.ssh_key_path == "" ? "${path.cwd}/id_rsa" : var.ssh_key_path
   os_hardening_resource = var.os_hardening_enabled == true ? null_resource.os_hardening : null
 }
 
@@ -12,7 +12,7 @@ resource "local_file" "ansible_inventory" {
       cluster_name       = var.cluster_name
       dns_zone_name      = var.dns_zone_name
       k8s_api_ip         = var.k8s_api_ip
-      k8s_internal_ip   = var.k8s_internal_ip
+      k8s_internal_ip    = var.k8s_internal_ip
       kubernetes_version = var.kubernetes_version
       master_nodes       = var.master_nodes
       network_plugin     = var.network_plugin
@@ -22,9 +22,9 @@ resource "local_file" "ansible_inventory" {
       windows_nodes      = var.windows_nodes
   })
 
-  filename   = "./inventory/inventory.yaml"
+  filename        = "./inventory/inventory.yaml"
   file_permission = "0644"
-  depends_on = [var.master_nodes, var.worker_nodes]
+  depends_on      = [var.master_nodes, var.worker_nodes]
   #   lifecycle {
   #     replace_triggered_by = [var.master_nodes, var.worker_nodes]
   #   }
@@ -53,9 +53,9 @@ resource "local_file" "k8s_cluster" {
       kube_oidc_groups_prefix   = var.kube_oidc_groups_prefix
   })
 
-  filename   = "./inventory/group_vars/k8s_cluster/k8s-cluster.yml"
+  filename        = "./inventory/group_vars/k8s_cluster/k8s-cluster.yml"
   file_permission = "0644"
-  depends_on = [local_file.ansible_inventory]
+  depends_on      = [local_file.ansible_inventory]
 }
 
 resource "local_file" "addons" {
@@ -70,9 +70,9 @@ resource "local_file" "addons" {
       vrrp_ip                = var.vrrp_ip
   })
 
-  filename   = "./inventory/group_vars/k8s_cluster/addons.yml"
+  filename        = "./inventory/group_vars/k8s_cluster/addons.yml"
   file_permission = "0644"
-  depends_on = [local_file.ansible_inventory]
+  depends_on      = [local_file.ansible_inventory]
 }
 
 resource "local_file" "k8s_hardening" {
@@ -93,9 +93,9 @@ resource "local_file" "k8s_hardening" {
       kubelet_rotate_server_certificates      = var.kubelet_rotate_server_certificates
   })
 
-  filename   = "./inventory/k8s_hardening.yml"
+  filename        = "./inventory/k8s_hardening.yml"
   file_permission = "0644"
-  depends_on = [local_file.ansible_inventory]
+  depends_on      = [local_file.ansible_inventory]
 }
 
 resource "null_resource" "clone_kubespray" {
@@ -119,7 +119,7 @@ resource "null_resource" "setup_kubespray_venv" {
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    command = <<-EOT
+    command     = <<-EOT
       #!/bin/bash
       set -e
 
@@ -217,11 +217,11 @@ resource "local_file" "os_hardening_playbook" {
   {})
 
   file_permission = "0644"
-  filename = "./inventory/os_hardening_playbook.yml"
+  filename        = "./inventory/os_hardening_playbook.yml"
 }
 
 resource "null_resource" "clone_ansible_hardening" {
-  count      = var.os_hardening_enabled == true ? 1 : 0
+  count = var.os_hardening_enabled == true ? 1 : 0
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
@@ -240,7 +240,7 @@ resource "null_resource" "clone_ansible_hardening" {
 
 resource "null_resource" "os_hardening" {
   count      = var.os_hardening_enabled == true ? 1 : 0
-  depends_on = [null_resource.wait_cloudinit, local_file.os_hardening_playbook,null_resource.setup_kubespray_venv]
+  depends_on = [null_resource.wait_cloudinit, local_file.os_hardening_playbook, null_resource.setup_kubespray_venv]
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
@@ -262,7 +262,7 @@ resource "null_resource" "os_hardening" {
 
 resource "null_resource" "run_kubespray" {
   count      = var.deploy_cluster ? 1 : 0
-  depends_on = [null_resource.wait_cloudinit, local.os_hardening_resource, null_resource.clone_kubespray,null_resource.setup_kubespray_venv]
+  depends_on = [null_resource.wait_cloudinit, local.os_hardening_resource, null_resource.clone_kubespray, null_resource.setup_kubespray_venv]
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]

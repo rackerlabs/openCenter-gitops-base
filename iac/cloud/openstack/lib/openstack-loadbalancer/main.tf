@@ -2,13 +2,13 @@ resource "openstack_lb_loadbalancer_v2" "k8s" {
 
   loadbalancer_provider = var.loadbalancer_provider
   # availability_zone     = var.availability_zone
-  name                  = "${var.naming_prefix}k8s"
-  vip_subnet_id         = var.subnet_id
-  vip_address           = var.vrrp_ip
+  name          = "${var.naming_prefix}k8s"
+  vip_subnet_id = var.subnet_id
+  vip_address   = var.vrrp_ip
 }
 
 resource "openstack_lb_pool_v2" "k8s" {
-  
+
   lb_method       = "SOURCE_IP"
   protocol        = "TCP"
   name            = "${var.naming_prefix}k8s"
@@ -16,7 +16,7 @@ resource "openstack_lb_pool_v2" "k8s" {
 }
 
 resource "openstack_lb_pool_v2" "rke2" {
-  count          = var.rke2_enable == false ? 0 : 1
+  count           = var.rke2_enable == false ? 0 : 1
   lb_method       = "SOURCE_IP"
   protocol        = "TCP"
   name            = "${var.naming_prefix}rke2"
@@ -24,7 +24,7 @@ resource "openstack_lb_pool_v2" "rke2" {
 }
 
 resource "openstack_lb_monitor_v2" "k8s" {
-  depends_on = [ openstack_lb_pool_v2.k8s ]
+  depends_on  = [openstack_lb_pool_v2.k8s]
   delay       = 30
   max_retries = 3
   name        = "${var.naming_prefix}k8s"
@@ -34,8 +34,8 @@ resource "openstack_lb_monitor_v2" "k8s" {
 }
 
 resource "openstack_lb_monitor_v2" "rke2" {
-  count = var.rke2_enable == false ? 0 : 1
-  depends_on = [ openstack_lb_pool_v2.rke2 ]
+  count       = var.rke2_enable == false ? 0 : 1
+  depends_on  = [openstack_lb_pool_v2.rke2]
   delay       = 30
   max_retries = 3
   name        = "${var.naming_prefix}rke2"
@@ -46,7 +46,7 @@ resource "openstack_lb_monitor_v2" "rke2" {
 
 
 resource "openstack_lb_member_v2" "rke2" {
-  depends_on = [ openstack_lb_pool_v2.rke2[0] ]
+  depends_on    = [openstack_lb_pool_v2.rke2[0]]
   count         = var.rke2_enable == false ? 0 : var.server_count
   address       = var.master_ips[count.index]
   name          = "${var.naming_prefix}${count.index}"
@@ -56,7 +56,7 @@ resource "openstack_lb_member_v2" "rke2" {
 }
 
 resource "openstack_lb_member_v2" "k8s" {
-  depends_on = [ openstack_lb_pool_v2.k8s ]
+  depends_on    = [openstack_lb_pool_v2.k8s]
   count         = var.server_count
   address       = var.master_ips[count.index]
   name          = "${var.naming_prefix}${count.index}"
@@ -75,7 +75,7 @@ resource "openstack_lb_listener_v2" "k8s" {
 }
 
 resource "openstack_lb_listener_v2" "rke2_api" {
-  count = var.rke2_enable == false ? 0 : 1
+  count           = var.rke2_enable == false ? 0 : 1
   default_pool_id = openstack_lb_pool_v2.k8s.id
   loadbalancer_id = openstack_lb_loadbalancer_v2.k8s.id
   name            = "${var.naming_prefix}rke2-api"
@@ -84,7 +84,7 @@ resource "openstack_lb_listener_v2" "rke2_api" {
 }
 
 resource "openstack_lb_listener_v2" "rke2_server" {
-  count = var.rke2_enable == false ? 0 : 1
+  count           = var.rke2_enable == false ? 0 : 1
   default_pool_id = openstack_lb_pool_v2.rke2[0].id
   loadbalancer_id = openstack_lb_loadbalancer_v2.k8s.id
   name            = "${var.naming_prefix}rke2-server"

@@ -1,10 +1,10 @@
 variable "additional_block_devices_worker" {
   description = "List of additional block devices to attach to worker instances"
   type = list(object({
-    source_type           = string           # "blank", "image", "volume", "snapshot"
+    source_type           = string # "blank", "image", "volume", "snapshot"
     volume_size           = number
     volume_type           = optional(string, "")
-    boot_index            = number           # Must be > 0 for non-boot devices
+    boot_index            = number # Must be > 0 for non-boot devices
     destination_type      = optional(string, "volume")
     delete_on_termination = optional(bool, true)
     mountpoint            = string
@@ -17,10 +17,10 @@ variable "additional_block_devices_worker" {
 variable "additional_block_devices_master" {
   description = "List of additional block devices to attach to master instances"
   type = list(object({
-    source_type           = string           # "blank", "image", "volume", "snapshot"
+    source_type           = string # "blank", "image", "volume", "snapshot"
     volume_size           = number
     volume_type           = optional(string, "")
-    boot_index            = number           # Must be > 0 for non-boot devices
+    boot_index            = number # Must be > 0 for non-boot devices
     destination_type      = optional(string, "volume")
     delete_on_termination = optional(bool, true)
     mountpoint            = string
@@ -33,16 +33,16 @@ variable "additional_block_devices_master" {
 variable "additional_ports_master" {
   description = "List of additional ports to create security group rules for custom applications"
   type        = list(string)
-  default     = []  # No rules created by default
+  default     = [] # No rules created by default
 }
 
 variable "additional_ports_worker" {
   description = "List of additional ports to create security group rules for custom applications"
   type        = list(string)
-  default     = []  # No rules created by default
+  default     = [] # No rules created by default
 }
 
-variable "ansible_inventory_enabled"{
+variable "ansible_inventory_enabled" {
   type    = bool
   default = false
 }
@@ -113,20 +113,20 @@ variable "create_container" {
 }
 
 variable "cp_server_group_affinity" {
-  type    = list(string)
-  default = ["anti-affinity"]
+  type        = list(string)
+  default     = ["anti-affinity"]
   description = "Set the Affinity Policy for the control plane server group"
 }
 
 variable "wn_server_group_affinity" {
-  type    = list(string)
-  default = []
+  type        = list(string)
+  default     = []
   description = "Set the Affinity Policy for the control plane server group"
 }
 
 variable "win_server_group_affinity" {
-  type    = list(string)
-  default = []
+  type        = list(string)
+  default     = []
   description = "Set the Affinity Policy for the control plane server group"
 }
 
@@ -136,7 +136,7 @@ variable "csi_enabled" {
 }
 
 variable "disable_bastion" {
-  type = bool
+  type    = bool
   default = false
 }
 
@@ -183,7 +183,7 @@ variable "image_id" {
 }
 
 variable "image_id_windows" {
-  type = string
+  type    = string
   default = "899af84f-d98f-4255-bf98-ceba5e3a8257"
 }
 
@@ -252,12 +252,12 @@ variable "openstack_user_name" {
 }
 
 variable "openstack_project_domain_name" {
-  type = string
+  type    = string
   default = null
 }
 
 variable "openstack_user_domain_name" {
-  type = string
+  type    = string
   default = null
 }
 
@@ -315,7 +315,7 @@ variable "size_worker_windows" {
     flavor = string
   })
   default = {
-    count = 0
+    count  = 0
     flavor = "gp.0.8.16"
   }
 }
@@ -407,7 +407,7 @@ variable "use_octavia" {
 }
 
 variable "loadbalancer_provider" {
-  type = string
+  type    = string
   default = "amphora"
 }
 
@@ -433,7 +433,7 @@ variable "kubelet_extra_binds" {
 }
 
 variable "k8s_api_port" {
-  type = number
+  type    = number
   default = 443
 }
 
@@ -503,141 +503,141 @@ variable "vlan_id" {
 }
 
 variable "node_master" {
-  type    = string
-  default = ""
+  type        = string
+  default     = ""
   description = "define the role to be used in hostname"
 }
 
 variable "node_worker" {
-  type    = string
-  default = ""
+  type        = string
+  default     = ""
   description = "define the role to be used in hostname"
 }
 
 variable "node_worker_windows" {
-  type    = string
-  default = ""
+  type        = string
+  default     = ""
   description = "define the role to be used in hostname"
 }
 
 variable "master_node_bfv_source_type" {
-  type    = string
-  default = "image"
+  type        = string
+  default     = "image"
   description = "he source type of the device. Must be one of blank, image, volume, or snapshot. Changing this creates a new server."
 }
 
 variable "master_node_bfv_volume_size" {
-  type    = number
-  default = 0
+  type        = number
+  default     = 0
   description = "boot from volume size for the master nodes"
 }
 
 variable "master_node_bfv_destination_type" {
-  type   = string
-  default = "local"
+  type        = string
+  default     = "local"
   description = "boot from volume type for the master nodes"
 }
 
 variable "master_node_bfv_delete_on_termination" {
-  type    = bool
-  default = true
+  type        = bool
+  default     = true
   description = "If true, the volume will be deleted when the server is terminated."
 }
 
 variable "master_node_bfv_volume_type" {
-  type    = string
-  default = "Standard"
+  type        = string
+  default     = "Standard"
   description = "The volume type that will be used, for example SSD or HDD storage. The available types depend on the OpenStack deployment."
 }
 
 variable "worker_node_bfv_source_type" {
-  type    = string
-  default = "image"
+  type        = string
+  default     = "image"
   description = "he source type of the device. Must be one of blank, image, volume, or snapshot. Changing this creates a new server."
 }
 
 variable "worker_node_bfv_volume_size" {
-  type    = number
-  default = 0
+  type        = number
+  default     = 0
   description = "boot from volume size for the master nodes"
 }
 
 variable "worker_node_bfv_destination_type" {
-  type   = string
-  default = "local"
+  type        = string
+  default     = "local"
   description = "boot from volume type for the master nodes"
 }
 
 variable "worker_node_bfv_delete_on_termination" {
-  type    = bool
-  default = true
+  type        = bool
+  default     = true
   description = "If true, the volume will be deleted when the server is terminated."
 }
 
 variable "worker_node_bfv_volume_type" {
-  type    = string
-  default = "standard"
+  type        = string
+  default     = "standard"
   description = "The volume type that will be used, for example SSD or HDD storage. The available types depend on the OpenStack deployment."
 }
 
 
 variable "worker_node_bfv_size_windows" {
-  type    = number
-  default = 100
+  type        = number
+  default     = 100
   description = "boot from volume size for the worker nodes"
 }
 
 variable "worker_node_bfv_type_windows" {
-  type   = string
-  default = "local"
+  type        = string
+  default     = "local"
   description = "boot from volume type for the worker nodes"
 }
 
 variable "ub_version" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "rke2_enable" {
-  type = bool
-  default = false
+  type        = bool
+  default     = false
   description = "value to create and configure the infrastructure for rke2"
 }
 
 variable "rke_server_port" {
-  type    = number
-  default = 9345
+  type        = number
+  default     = 9345
   description = "value to set the port for the rke2 join api"
 }
 
 variable "reboot" {
-  type    = bool
-  default = true
+  type        = bool
+  default     = true
   description = "Reboot the node on cloud-init run?"
 }
 
 variable "vrrp_enabled" {
-  type = bool
-  default = true
+  type        = bool
+  default     = true
   description = "Will create a port to use as a VIP. If floating IP pool is defined it will get a floating IP assigned to it."
 }
 
 variable "k8s_api_port_acl" {
-  type = list(string)
-  default = ["0.0.0.0/0"]
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
   description = "List of CIDR blocks to allow access to to the K8s API Port"
 }
 
 variable "windows_user" {
   type    = string
   default = "administrator"
-  
+
 }
 
 variable "windows_admin_password" {
-  type      = string
-  default   = ""
-  sensitive = true
+  type        = string
+  default     = ""
+  sensitive   = true
   description = "The password for the Windows administrator user."
 }
 
@@ -660,18 +660,18 @@ variable "windows_admin_password" {
 variable "additional_server_pools_worker" {
   description = "List of additional worker server pools with their configurations"
   type = list(object({
-    name                             = string
-    server_group_affinity            = optional(string, "soft-anti-affinity")
-    worker_count                     = number
-    flavor_worker                    = string
-    node_worker                      = string
-    image_id                         = string
-    image_name                       = optional(string, "")
-    allowed_addresses                = optional(list(string), [])
-    worker_node_bfv_volume_size      = optional(number, 0)
-    worker_node_bfv_destination_type = optional(string, "local")
-    worker_node_bfv_source_type      = optional(string, "image")
-    worker_node_bfv_volume_type      = optional(string, "")
+    name                                  = string
+    server_group_affinity                 = optional(string, "soft-anti-affinity")
+    worker_count                          = number
+    flavor_worker                         = string
+    node_worker                           = string
+    image_id                              = string
+    image_name                            = optional(string, "")
+    allowed_addresses                     = optional(list(string), [])
+    worker_node_bfv_volume_size           = optional(number, 0)
+    worker_node_bfv_destination_type      = optional(string, "local")
+    worker_node_bfv_source_type           = optional(string, "image")
+    worker_node_bfv_volume_type           = optional(string, "")
     worker_node_bfv_delete_on_termination = optional(bool, true)
     additional_block_devices_worker = optional(list(object({
       source_type           = string
@@ -684,8 +684,8 @@ variable "additional_server_pools_worker" {
       filesystem            = optional(string, "")
       label                 = optional(string, "")
     })), [])
-    pf9_onboard                      = optional(bool, false)
-    subnet_id                        = optional(string, "")
+    pf9_onboard = optional(bool, false)
+    subnet_id   = optional(string, "")
   }))
   default = []
 }
@@ -693,18 +693,18 @@ variable "additional_server_pools_worker" {
 variable "additional_server_pools_worker_windows" {
   description = "List of additional Windows worker server pools with their configurations"
   type = list(object({
-    name                             = string
-    server_group_affinity            = optional(string, "soft-anti-affinity")
-    worker_count                     = number
-    flavor_worker                    = string
-    node_worker                      = string
-    image_id                         = string
-    image_name                       = optional(string, "")
-    allowed_addresses                = optional(list(string), [])
-    worker_node_bfv_volume_size      = optional(number, 0)
-    worker_node_bfv_destination_type = optional(string, "local")
-    worker_node_bfv_source_type      = optional(string, "image")
-    worker_node_bfv_volume_type      = optional(string, "")
+    name                                  = string
+    server_group_affinity                 = optional(string, "soft-anti-affinity")
+    worker_count                          = number
+    flavor_worker                         = string
+    node_worker                           = string
+    image_id                              = string
+    image_name                            = optional(string, "")
+    allowed_addresses                     = optional(list(string), [])
+    worker_node_bfv_volume_size           = optional(number, 0)
+    worker_node_bfv_destination_type      = optional(string, "local")
+    worker_node_bfv_source_type           = optional(string, "image")
+    worker_node_bfv_volume_type           = optional(string, "")
     worker_node_bfv_delete_on_termination = optional(bool, true)
     additional_block_devices_worker_windows = optional(list(object({
       source_type           = string
@@ -717,9 +717,9 @@ variable "additional_server_pools_worker_windows" {
       filesystem            = optional(string, "")
       label                 = optional(string, "")
     })), [])
-    subnet_id                        = optional(string, "")
-    windows_user                     = optional(string, "Administrator")
-    windows_admin_password           = optional(string, "")
+    subnet_id              = optional(string, "")
+    windows_user           = optional(string, "Administrator")
+    windows_admin_password = optional(string, "")
   }))
   default = []
 }

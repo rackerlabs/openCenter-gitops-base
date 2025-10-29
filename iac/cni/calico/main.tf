@@ -10,11 +10,11 @@ resource "local_file" "calico_values" {
       calico_interface_autodetect      = var.calico_interface_autodetect
       calico_interface_autodetect_cidr = var.calico_interface_autodetect_cidr
       calico_version                   = var.calico_version
-      k8s_internal_ip                 = var.k8s_internal_ip
+      k8s_internal_ip                  = var.k8s_internal_ip
       k8s_api_port                     = var.k8s_api_port
   })
 
-  filename = "${path.root}/../../../applications/overlays/${var.cluster_name}/services/calico/helm-values/override_values.yaml"
+  filename        = "${path.root}/../../../applications/overlays/${var.cluster_name}/services/calico/helm-values/override_values.yaml"
   file_permission = "0644"
 
 }

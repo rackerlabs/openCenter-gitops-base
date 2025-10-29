@@ -19,7 +19,7 @@ resource "openstack_networking_subnet_v2" "subnet" {
 }
 
 resource "openstack_networking_router_v2" "router" {
-  count =  var.vlan_id == "" ? 1 : 0
+  count = var.vlan_id == "" ? 1 : 0
 
   name                = "${var.naming_prefix}k8s"
   external_network_id = var.router_external_network_id

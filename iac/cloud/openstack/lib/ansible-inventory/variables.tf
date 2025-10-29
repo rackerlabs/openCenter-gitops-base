@@ -1,5 +1,5 @@
 variable "address_bastion" {
-  type = string
+  type    = string
   default = ""
 }
 
