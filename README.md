@@ -24,11 +24,14 @@ applications/
 |-------------|----------|-----------|---------|
 | **cert-manager** | Core Service | `cert-manager` | Automated certificate management |
 | **gateway-api** | Core Service | `gateway-api` | Kubernetes Gateway API implementation |
+| **hyperdx** | Core Service | `observability` | Unified observability platform with ClickHouse backend |
 | **ingress-nginx** | Core Service | `ingress-nginx` | NGINX-based ingress controller |
 | **keycloak** | Core Service | `keycloak` | Identity and access management |
 | **kube-prometheus-stack** | Core Service | `observability` | Complete monitoring and alerting stack |
 | **metallb** | Core Service | `metallb-system` | Bare metal load balancer |
 | **olm** | Core Service | `olm` | Operator Lifecycle Manager |
+| **opentelemetry-kube-stack** | Core Service | `observability` | Comprehensive OpenTelemetry observability stack |
+| **psmdb-operator** | Core Service | `psmdb-operator` | Percona Server for MongoDB Operator |
 | **sealed-secrets** | Core Service | `sealed-secrets` | Encrypted secrets management |
 | **velero** | Core Service | `velero` | Cluster backup and disaster recovery |
 | **alert-proxy** | Managed Service | `rackspace` | Rackspace alert aggregation |
@@ -56,6 +59,18 @@ applications/
   - Next-generation ingress and traffic management
   - Advanced routing capabilities
   - Service mesh integration ready
+
+#### **hyperdx**
+- **Purpose**: Unified observability platform with ClickHouse backend
+- **Source**: HyperDX Helm repository (`https://hyperdxio.github.io/helm-charts`)
+- **Namespace**: `observability`
+- **Features**:
+  - Logs, traces, and metrics in one interface
+  - Advanced correlation between telemetry types
+  - ClickHouse backend for high-performance analytics
+  - MongoDB for metadata and configuration storage
+  - OpenTelemetry Collector for data ingestion
+  - Developer-friendly modern UI
 
 #### **ingress-nginx**
 - **Purpose**: NGINX-based ingress controller
@@ -102,6 +117,29 @@ applications/
   - Operator installation and management
   - Dependency resolution
   - Automatic updates
+
+#### **opentelemetry-kube-stack**
+- **Purpose**: Comprehensive OpenTelemetry observability stack
+- **Source**: OpenTelemetry Helm repository (`https://open-telemetry.github.io/opentelemetry-helm-charts`)
+- **Namespace**: `observability`
+- **Features**:
+  - OpenTelemetry Operator for collector management
+  - Auto-instrumentation for multiple languages
+  - Kube State Metrics for cluster observability
+  - Node Exporter for infrastructure metrics
+  - Complete telemetry data collection (traces, metrics, logs)
+
+#### **psmdb-operator**
+- **Purpose**: Percona Server for MongoDB Operator
+- **Source**: Percona Helm repository (`https://percona.github.io/percona-helm-charts`)
+- **Namespace**: `psmdb-operator`
+- **Features**:
+  - Automated MongoDB deployment and management
+  - High availability with replica sets and sharding
+  - Built-in backup and point-in-time recovery
+  - TLS encryption and authentication
+  - Integration with Percona Monitoring and Management (PMM)
+  - Enterprise-grade security and compliance
 
 #### **sealed-secrets**
 - **Purpose**: Encrypted secrets management
@@ -191,13 +229,14 @@ All applications follow these patterns:
 
 ### Namespace Organization
 - `cert-manager`: Certificate management
-- `ingress-nginx`: Ingress controllers
-- `observability`: Monitoring and alerting
-- `metallb-system`: Load balancing
-- `velero`: Backup and recovery
-- `keycloak`: Identity and access management
-- `rackspace`: Managed services
 - `gateway-api`: Next-gen traffic management
+- `ingress-nginx`: Ingress controllers
+- `keycloak`: Identity and access management
+- `metallb-system`: Load balancing
+- `observability`: Monitoring, alerting, and observability platforms
+- `psmdb-operator`: MongoDB operator and database management
+- `rackspace`: Managed services
+- `velero`: Backup and recovery
 
 ## Usage
 

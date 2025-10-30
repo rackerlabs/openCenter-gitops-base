@@ -1,0 +1,37 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: psmdb-operator
+  namespace: psmdb-operator
+spec:
+  releaseName: psmdb-operator
+  interval: 5m
+  timeout: 10m
+  driftDetection:
+    mode: enabled
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    remediation:
+      retries: 0
+      remediateLastFailure: false
+  targetNamespace: psmdb-operator
+  chart:
+    spec:
+      chart: psmdb-operator
+      version: 1.21.1
+      sourceRef:
+        kind: HelmRepository
+        name: percona
+        namespace: psmdb-operator
+  valuesFrom:
+    - kind: Secret
+      name: psmdb-operator-values-base
+      valuesKey: hardened.yaml
+    - kind: Secret
+      name: psmdb-operator-values-override
+      valuesKey: override.yaml
+      optional: true

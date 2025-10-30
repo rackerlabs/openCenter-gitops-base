@@ -1,0 +1,37 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: hyperdx
+  namespace: observability
+spec:
+  releaseName: hyperdx
+  interval: 5m
+  timeout: 10m
+  driftDetection:
+    mode: enabled
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    remediation:
+      retries: 0
+      remediateLastFailure: false
+  targetNamespace: observability
+  chart:
+    spec:
+      chart: hdx-oss-v2
+      version: 0.8.1
+      sourceRef:
+        kind: HelmRepository
+        name: hyperdx
+        namespace: observability
+  valuesFrom:
+    - kind: Secret
+      name: hyperdx-values-base
+      valuesKey: hardened.yaml
+    - kind: Secret
+      name: hyperdx-values-override
+      valuesKey: override.yaml
+      optional: true

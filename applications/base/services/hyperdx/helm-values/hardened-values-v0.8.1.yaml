@@ -1,0 +1,238 @@
+# Security configurations for HyperDX OSS V2
+# Version: 0.8.1
+
+global:
+  # Use a more secure storage class if available
+  storageClassName: "local-path"
+  # Keep PVCs when uninstalling to preserve data
+  keepPVC: true
+  # Image pull secrets for private registries (helps avoid rate limiting)
+  imagePullSecrets: []
+
+# HyperDX main application configuration
+hyperdx:
+  image:
+    repository: docker.hyperdx.io/hyperdx/hyperdx
+    pullPolicy: IfNotPresent
+  
+  # Security-focused configuration
+  apiKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # Should be overridden in production
+  logLevel: "info"
+  usageStatsEnabled: false  # Disable for privacy
+  
+  # Frontend URL configuration
+  frontendUrl: "http://localhost:3000"  # Should be overridden for production ingress
+  
+  # Node selector for Linux nodes
+  nodeSelector:
+    kubernetes.io/os: linux
+  
+  # Tolerations (empty by default)
+  tolerations: []
+  
+  # Probes configuration
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  # Service configuration
+  service:
+    type: ClusterIP  # Secure internal access only
+    annotations: {}
+  
+  # Ingress disabled by default for security
+  ingress:
+    enabled: false
+    ingressClassName: nginx
+    host: "localhost"
+    tls:
+      enabled: false
+  
+  # Single replica for initial deployment
+  replicas: 1
+  
+  # Pod disruption budget
+  podDisruptionBudget:
+    enabled: false
+
+# MongoDB configuration with security hardening
+mongodb:
+  image: "mongo:5.0.14-focal"
+  port: 27017
+  enabled: true
+  
+  # Node selector for Linux nodes
+  nodeSelector:
+    kubernetes.io/os: linux
+  
+  # Tolerations (empty by default)
+  tolerations: []
+  
+  # Persistence configuration
+  persistence:
+    enabled: true
+    dataSize: 10Gi
+  
+  # Health probes
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# ClickHouse configuration with security hardening
+clickhouse:
+  image: "clickhouse/clickhouse-server:25.7-alpine"
+  port: 8123
+  nativePort: 9000
+  terminationGracePeriodSeconds: 90
+  enabled: true
+  
+  # Resource limits for security and stability
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+  
+  # Node selector for Linux nodes
+  nodeSelector:
+    kubernetes.io/os: linux
+  
+  # Tolerations (empty by default)
+  tolerations: []
+  
+  # Health probes
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  startupProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+  
+  # Service configuration
+  service:
+    type: ClusterIP  # Secure internal access only
+    annotations: {}
+  
+  # Persistence configuration
+  persistence:
+    enabled: true
+    dataSize: 20Gi  # Increased for production use
+    logSize: 5Gi
+  
+  # Prometheus metrics
+  prometheus:
+    enabled: true
+    port: 9363
+    endpoint: "/metrics"
+  
+  # Security configuration
+  config:
+    users:
+      appUserPassword: "hyperdx-secure-password"  # Should be overridden
+      otelUserPassword: "otel-secure-password"    # Should be overridden
+      otelUserName: "otelcollector"
+    # Restrict access to Kubernetes cluster CIDRs only
+    clusterCidrs:
+      - "10.0.0.0/8"      # Most Kubernetes clusters
+      - "172.16.0.0/12"   # Docker and some cloud providers
+      - "192.168.0.0/16"  # Local development clusters
+
+# OpenTelemetry Collector configuration
+otel:
+  image:
+    repository: docker.hyperdx.io/hyperdx/hyperdx-otel-collector
+    pullPolicy: IfNotPresent
+  
+  enabled: true
+  replicas: 1
+  
+  # Resource limits for security and stability
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  
+  # Node selector for Linux nodes
+  nodeSelector:
+    kubernetes.io/os: linux
+  
+  # Tolerations (empty by default)
+  tolerations: []
+  
+  # Health probes
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  # Port configuration
+  port: 13133
+  nativePort: 24225
+  grpcPort: 4317
+  httpPort: 4318
+  healthPort: 8888
+  
+  # Database configuration
+  clickhouseDatabase: "default"
+  
+  # Environment variables (empty by default)
+  env: []
+  
+  # Custom configuration (empty by default)
+  customConfig: ""
+
+# Tasks configuration (disabled by default for security)
+tasks:
+  enabled: false
+  checkAlerts:
+    schedule: "*/5 * * * *"  # Every 5 minutes instead of 1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi

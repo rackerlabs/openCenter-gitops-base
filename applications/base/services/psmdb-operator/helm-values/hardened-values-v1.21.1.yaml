@@ -1,0 +1,98 @@
+# Security configurations for Percona Server for MongoDB Operator
+# Version: 1.21.1
+
+# Replica count for operator deployment
+replicaCount: 1
+
+# Image configuration
+image:
+  repository: percona/percona-server-mongodb-operator
+  tag: 1.21.0
+  pullPolicy: IfNotPresent
+
+# Disable telemetry for privacy and security
+disableTelemetry: true
+
+# Operator scope configuration
+# Set to false for namespace-scoped deployment (more secure)
+watchAllNamespaces: false
+
+# RBAC configuration
+rbac:
+  create: true
+
+# Service Account configuration
+serviceAccount:
+  create: true
+  annotations: {}
+
+# Pod annotations for monitoring integration
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+
+# Pod labels
+podLabels: {}
+
+# Pod security context with hardening
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  fsGroup: 65534
+  fsGroupChangePolicy: "OnRootMismatch"
+  seccompProfile:
+    type: RuntimeDefault
+
+# Container security context with hardening
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65534
+  seccompProfile:
+    type: RuntimeDefault
+
+# Image pull secrets (empty by default)
+imagePullSecrets: []
+
+# Environment configuration
+env:
+  resyncPeriod: 5s
+
+# Resource limits and requests for security and stability
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+# Node selector for Linux nodes
+nodeSelector:
+  kubernetes.io/os: linux
+
+# Tolerations (empty by default)
+tolerations: []
+
+# Affinity rules (empty by default)
+affinity: {}
+
+# Logging configuration
+logStructured: true
+logLevel: "INFO"
+
+# Concurrency control for better resource management
+maxConcurrentReconciles: "1"
+
+# Deployment annotations
+annotations: {}
+
+# Deployment labels
+labels:
+  app.kubernetes.io/part-of: percona-mongodb
+  app.kubernetes.io/managed-by: flux
