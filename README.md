@@ -29,7 +29,10 @@ applications/
 | **kube-prometheus-stack** | Core Service | `observability` | Complete monitoring and alerting stack |
 | **metallb** | Core Service | `metallb-system` | Bare metal load balancer |
 | **olm** | Core Service | `olm` | Operator Lifecycle Manager |
-| **opentelemetry-operator** | Core Service | `observability` | OpenTelemetry operator for auto-instrumentation |
+| **loki** | Core Service | `observability` | Log aggregation system |
+| **mimir** | Core Service | `observability` | Long-term storage for Prometheus metrics |
+| **tempo** | Core Service | `observability` | Distributed tracing backend |
+| **opentelemetry-kube-stack** | Core Service | `observability` | Comprehensive OpenTelemetry observability stack |
 | **sealed-secrets** | Core Service | `sealed-secrets` | Encrypted secrets management |
 | **velero** | Core Service | `velero` | Cluster backup and disaster recovery |
 | **alert-proxy** | Managed Service | `rackspace` | Rackspace alert aggregation |
@@ -104,16 +107,46 @@ applications/
   - Dependency resolution
   - Automatic updates
 
-#### **opentelemetry-operator**
-- **Purpose**: OpenTelemetry operator for auto-instrumentation and collector management
+#### **loki**
+- **Purpose**: Log aggregation system for centralized logging
+- **Source**: Grafana Helm repository
+- **Namespace**: `observability`
+- **Features**:
+  - Horizontally scalable log aggregation
+  - Label-based log indexing
+  - Integration with Grafana for log visualization
+  - Prometheus-style querying (LogQL)
+
+#### **mimir**
+- **Purpose**: Long-term storage for Prometheus metrics
+- **Source**: Grafana Helm repository
+- **Namespace**: `observability`
+- **Features**:
+  - Horizontally scalable metrics storage
+  - Multi-tenancy support
+  - High availability and durability
+  - Compatible with Prometheus remote write
+
+#### **tempo**
+- **Purpose**: Distributed tracing backend
+- **Source**: Grafana Helm repository
+- **Namespace**: `observability`
+- **Features**:
+  - Scalable trace storage and retrieval
+  - OpenTelemetry and Jaeger compatibility
+  - Integration with Grafana for trace visualization
+  - Cost-effective trace storage
+
+#### **opentelemetry-kube-stack**
+- **Purpose**: Comprehensive OpenTelemetry observability stack
 - **Source**: OpenTelemetry Helm repository (`https://open-telemetry.github.io/opentelemetry-helm-charts`)
 - **Namespace**: `observability`
 - **Features**:
-  - Automatic OpenTelemetry instrumentation injection
-  - OpenTelemetry Collector deployment and management
-  - Custom resource definitions for OpenTelemetry configuration
-  - Webhook-based sidecar injection
-  - Multi-language auto-instrumentation support (Java, Node.js, Python, .NET, Go)
+  - OpenTelemetry Operator for collector management
+  - Auto-instrumentation for multiple languages
+  - Kube State Metrics for cluster observability
+  - Node Exporter for infrastructure metrics
+  - Complete telemetry data collection (traces, metrics, logs)
 
 #### **sealed-secrets**
 - **Purpose**: Encrypted secrets management

@@ -6,9 +6,9 @@ resources:
   - "source.yaml"
   - "helmrelease.yaml"
 secretGenerator:
-  - name: opentelemetry-operator-values-base
+  - name: loki-distributed-values-base
     type: Opaque
     files:
-      - hardened.yaml=helm-values/hardened-values-v0.98.0.yaml
+      - hardened.yaml=helm-values/hardened-values-v0.80.5.yaml
     options:
       disableNameSuffixHash: true
