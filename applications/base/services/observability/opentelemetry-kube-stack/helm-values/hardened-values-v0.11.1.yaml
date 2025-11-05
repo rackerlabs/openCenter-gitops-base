@@ -492,15 +492,15 @@ collectors:
       logsCollection:
         enabled: true
       kubeletMetrics:
-        enabled: false
+        enabled: true
       hostMetrics:
-        enabled: false
+        enabled: true
       kubernetesAttributes:
         enabled: true
       kubernetesEvents:
         enabled: true
       clusterMetrics:
-        enabled: false
+        enabled: true
     config:
       receivers:
         otlp:
@@ -543,15 +543,6 @@ collectors:
       service:
         pipelines:
           traces:
-            receivers:
-              - otlp
-            processors:
-              - resourcedetection/env
-              - resource/hostname
-              - batch
-            exporters:
-              - debug
-          metrics:
             receivers:
               - otlp
             processors:
@@ -1764,4 +1755,3 @@ extraObjects: []
 #             objectName: imagePullSecret
 #         secretName: demo-image-pull-secrets
 #         type: kubernetes.io/dockerconfigjson
-
