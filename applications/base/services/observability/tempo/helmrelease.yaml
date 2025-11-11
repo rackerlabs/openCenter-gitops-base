@@ -1,0 +1,36 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tempo
+  namespace: observability
+spec:
+  interval: 5m
+  timeout: 10m
+  driftDetection:
+    mode: enabled
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    remediation:
+      retries: 0
+      remediateLastFailure: false
+  targetNamespace: observability
+  chart:
+    spec:
+      chart: tempo-distributed
+      version: 1.55.0
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: observability
+  valuesFrom:
+    - kind: Secret
+      name: tempo-values-base
+      valuesKey: hardened.yaml
+    - kind: Secret
+      name: tempo-values-override
+      valuesKey: override.yaml
+      optional: true

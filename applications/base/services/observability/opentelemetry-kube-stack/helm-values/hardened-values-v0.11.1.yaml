@@ -523,6 +523,12 @@ collectors:
           send_batch_size: 1000
           timeout: 1s
           send_batch_max_size: 1500
+        memory_limiter:
+          # 80% of maximum memory up to 2G
+          limit_mib: 400
+          # 25% of limit up to 2G
+          spike_limit_mib: 100
+          check_interval: 5s
       exporters:
         otlphttp/loki:
           endpoint: http://observability-loki-gateway.observability.svc.cluster.local/otlp
@@ -539,18 +545,33 @@ collectors:
             enabled: true
             num_consumers: 10
             queue_size: 2000
-
+        otlp/tempo:
+          endpoint: observability-tempo-distributor.observability.svc.cluster.local:4317
+          tls:
+            insecure: true
+          headers:
+            X-Scope-OrgID: "default"
+          compression: gzip
+          timeout: 30s
+          retry_on_failure:
+            enabled: true
+            initial_interval: 1s
+            max_interval: 10s
+            max_elapsed_time: 0s
+          sending_queue:
+            enabled: true
+            num_consumers: 10
+            queue_size: 2000
       service:
         pipelines:
           traces:
             receivers:
               - otlp
             processors:
-              - resourcedetection/env
-              - resource/hostname
+              - memory_limiter
               - batch
             exporters:
-              - debug
+              - otlp/tempo
           logs:
             receivers:
               - otlp
