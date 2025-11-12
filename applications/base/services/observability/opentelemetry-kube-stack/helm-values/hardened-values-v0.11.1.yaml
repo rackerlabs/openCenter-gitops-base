@@ -532,8 +532,6 @@ collectors:
       exporters:
         otlphttp/loki:
           endpoint: http://observability-loki-gateway.observability.svc.cluster.local/otlp
-          headers:
-            X-Scope-OrgID: "default"
           compression: gzip
           timeout: 30s
           retry_on_failure:
@@ -549,8 +547,6 @@ collectors:
           endpoint: observability-tempo-distributor.observability.svc.cluster.local:4317
           tls:
             insecure: true
-          headers:
-            X-Scope-OrgID: "default"
           compression: gzip
           timeout: 30s
           retry_on_failure:
