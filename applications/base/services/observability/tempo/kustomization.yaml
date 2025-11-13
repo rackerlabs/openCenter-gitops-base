@@ -5,10 +5,10 @@ resources:
   - "../sources/grafana.yaml"
   - "helmrelease.yaml"
 secretGenerator:
-  - name: loki-values-base
+  - name: tempo-values-base
     namespace: observability
     type: Opaque
     files:
-      - hardened.yaml=helm-values/hardened-values-v6.45.2.yaml
+      - hardened.yaml=helm-values/hardened-values-1.55.0.yaml
     options:
       disableNameSuffixHash: true
