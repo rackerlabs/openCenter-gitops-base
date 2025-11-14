@@ -6,3 +6,11 @@ namespace: vsphere-csi
 resources:
   - "namespace.yaml"
   - "https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/v3.3.0/manifests/vanilla/vsphere-csi-driver.yaml"
+
+images:
+  - name: gcr.io/cloud-provider-vsphere/csi/release/driver
+    newName: registry.k8s.io/csi-vsphere/driver
+    newTag: v3.3.0
+  - name: gcr.io/cloud-provider-vsphere/csi/release/syncer
+    newName: registry.k8s.io/csi-vsphere/syncer
+    newTag: v3.3.0
