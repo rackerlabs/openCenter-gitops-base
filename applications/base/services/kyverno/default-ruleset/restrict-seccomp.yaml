@@ -15,8 +15,8 @@ metadata:
       The seccomp profile must not be explicitly set to Unconfined. This policy,
       requiring Kubernetes v1.19 or later, ensures that seccomp is unset or
       set to `RuntimeDefault` or `Localhost`.
-    
-  labels: 
+
+  labels:
     app.kubernetes.io/component: kyverno
     app.kubernetes.io/instance: kyverno-policies
     app.kubernetes.io/managed-by: Helm
@@ -31,9 +31,9 @@ spec:
     - name: check-seccomp
       match:
         any:
-        - resources:
-            kinds:
-              - Pod
+          - resources:
+              kinds:
+                - Pod
       validate:
         failureAction: Audit
         allowExistingViolations: true
@@ -50,14 +50,14 @@ spec:
               =(seccompProfile):
                 =(type): "RuntimeDefault | Localhost"
             =(ephemeralContainers):
-            - =(securityContext):
-                =(seccompProfile):
-                  =(type): "RuntimeDefault | Localhost"
+              - =(securityContext):
+                  =(seccompProfile):
+                    =(type): "RuntimeDefault | Localhost"
             =(initContainers):
-            - =(securityContext):
-                =(seccompProfile):
-                  =(type): "RuntimeDefault | Localhost"
+              - =(securityContext):
+                  =(seccompProfile):
+                    =(type): "RuntimeDefault | Localhost"
             containers:
-            - =(securityContext):
-                =(seccompProfile):
-                  =(type): "RuntimeDefault | Localhost"
+              - =(securityContext):
+                  =(seccompProfile):
+                    =(type): "RuntimeDefault | Localhost"

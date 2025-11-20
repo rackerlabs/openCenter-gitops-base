@@ -16,8 +16,8 @@ metadata:
       ensures nothing but the default procMount can be specified. Note that in order for users
       to deviate from the `Default` procMount requires setting a feature gate at the API
       server.
-    
-  labels: 
+
+  labels:
     app.kubernetes.io/component: kyverno
     app.kubernetes.io/instance: kyverno-policies
     app.kubernetes.io/managed-by: Helm
@@ -32,9 +32,9 @@ spec:
     - name: check-proc-mount
       match:
         any:
-        - resources:
-            kinds:
-              - Pod
+          - resources:
+              kinds:
+                - Pod
       validate:
         failureAction: Audit
         allowExistingViolations: true

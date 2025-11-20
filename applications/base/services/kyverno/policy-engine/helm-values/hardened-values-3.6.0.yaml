@@ -774,10 +774,10 @@ features:
 admissionController:
   autoscaling:
     # -- Enable horizontal pod autoscaling
-    enabled: false
+    enabled: true
 
     # -- Minimum number of pods
-    minReplicas: 1
+    minReplicas: 3
 
     # -- Maximum number of pods
     maxReplicas: 10
@@ -995,10 +995,10 @@ admissionController:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget.
     # Will always be enabled if replicas > 1. This non-declarative behavior should ideally be avoided, but changing it now would be breaking.
-    enabled: false
+    enabled: true
     # -- Configures the minimum available pods for disruptions.
     # Cannot be used if `maxUnavailable` is set.
-    minAvailable: 1
+    minAvailable: 2
     # -- Configures the maximum unavailable pods for disruptions.
     # Cannot be used if `minAvailable` is set.
     maxUnavailable:
@@ -1450,7 +1450,7 @@ backgroundController:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget.
     # Will always be enabled if replicas > 1. This non-declarative behavior should ideally be avoided, but changing it now would be breaking.
-    enabled: false
+    enabled: true
     # -- Configures the minimum available pods for disruptions.
     # Cannot be used if `maxUnavailable` is set.
     minAvailable: 1
@@ -1781,7 +1781,7 @@ cleanupController:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget.
     # Will always be enabled if replicas > 1. This non-declarative behavior should ideally be avoided, but changing it now would be breaking.
-    enabled: false
+    enabled: true
     # -- Configures the minimum available pods for disruptions.
     # Cannot be used if `maxUnavailable` is set.
     minAvailable: 1
@@ -2083,7 +2083,7 @@ reportsController:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget.
     # Will always be enabled if replicas > 1. This non-declarative behavior should ideally be avoided, but changing it now would be breaking.
-    enabled: false
+    enabled: true
     # -- Configures the minimum available pods for disruptions.
     # Cannot be used if `maxUnavailable` is set.
     minAvailable: 1

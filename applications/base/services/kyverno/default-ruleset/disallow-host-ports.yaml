@@ -15,8 +15,8 @@ metadata:
       Access to host ports allows potential snooping of network traffic and should not be
       allowed, or at minimum restricted to a known list. This policy ensures the `hostPort`
       field is unset or set to `0`.
-    
-  labels: 
+
+  labels:
     app.kubernetes.io/component: kyverno
     app.kubernetes.io/instance: kyverno-policies
     app.kubernetes.io/managed-by: Helm
@@ -31,9 +31,9 @@ spec:
     - name: host-ports-none
       match:
         any:
-        - resources:
-            kinds:
-              - Pod
+          - resources:
+              kinds:
+                - Pod
       validate:
         failureAction: Audit
         allowExistingViolations: true
