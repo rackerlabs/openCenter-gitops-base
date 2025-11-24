@@ -1,0 +1,55 @@
+---
+# Source: kyverno-policies/templates/restricted/disallow-privilege-escalation.yaml
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privilege-escalation
+  annotations:
+    policies.kyverno.io/title: Disallow Privilege Escalation
+    policies.kyverno.io/category: Pod Security Standards (Restricted)
+    policies.kyverno.io/severity: "high"
+    policies.kyverno.io/subject: Pod
+    kyverno.io/kyverno-version: v1.15.2
+    kyverno.io/kubernetes-version: ">=1.25.0-0"
+    policies.kyverno.io/description: >-
+      Privilege escalation, such as via set-user-ID or set-group-ID file mode, should not be allowed.
+      This policy ensures the `allowPrivilegeEscalation` field is set to `false`.
+
+  labels:
+    app.kubernetes.io/component: kyverno
+    app.kubernetes.io/instance: kyverno-policies
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kyverno-policies
+    app.kubernetes.io/part-of: kyverno-policies
+    app.kubernetes.io/version: "3.5.2"
+    helm.sh/chart: kyverno-policies-3.5.2
+spec:
+  background: true
+  failurePolicy: Ignore
+  rules:
+    - name: privilege-escalation
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        failureAction: Audit
+        allowExistingViolations: true
+        message: >-
+          Privilege escalation is disallowed. The fields
+          spec.containers[*].securityContext.allowPrivilegeEscalation,
+          spec.initContainers[*].securityContext.allowPrivilegeEscalation,
+          and spec.ephemeralContainers[*].securityContext.allowPrivilegeEscalation
+          must be set to `false`.
+        pattern:
+          spec:
+            =(ephemeralContainers):
+              - securityContext:
+                  allowPrivilegeEscalation: "false"
+            =(initContainers):
+              - securityContext:
+                  allowPrivilegeEscalation: "false"
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: "false"
