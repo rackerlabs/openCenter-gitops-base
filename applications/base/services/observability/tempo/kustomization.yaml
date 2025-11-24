@@ -1,0 +1,14 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - "../sources/grafana.yaml"
+  - "helmrelease.yaml"
+secretGenerator:
+  - name: tempo-values-base
+    namespace: observability
+    type: Opaque
+    files:
+      - hardened.yaml=helm-values/hardened-values-1.55.0.yaml
+    options:
+      disableNameSuffixHash: true

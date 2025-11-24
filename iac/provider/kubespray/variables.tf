@@ -167,7 +167,7 @@ variable "os_hardening_enabled" {
   description = "Enable hardening for the operating system. This will apply settings to the OS from https://opendev.org/openstack/ansible-hardening"
 }
 
-variable "ansible_hardening_version"  {
+variable "ansible_hardening_version" {
   type    = string
   default = "stable/2025.1"
 }

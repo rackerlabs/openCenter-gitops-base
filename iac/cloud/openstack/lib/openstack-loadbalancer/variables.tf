@@ -34,23 +34,23 @@ variable "k8s_api_port" {
 }
 
 variable "vrrp_ip" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "loadbalancer_provider" {
-  type = string
+  type    = string
   default = "amphora"
 }
 
 variable "rke2_enable" {
-  type = bool
-  default = false
+  type        = bool
+  default     = false
   description = "value to create additional listeners for rke2"
 }
 
 variable "rke_server_port" {
-  type    = number
-  default = 9345
+  type        = number
+  default     = 9345
   description = "value to set the port for the rke2 join api"
 }
