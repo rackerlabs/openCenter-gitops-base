@@ -4,5 +4,6 @@ kind: Namespace
 metadata:
   name: velero
   labels:
-    pod-security.kubernetes.io/audit: baseline
-    pod-security.kubernetes.io/warn: baseline
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
+    pod-security.kubernetes.io/enforce: privileged
