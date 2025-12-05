@@ -3,8 +3,8 @@ variable "windows_user" {
   default = "administrator"
 }
 variable "windows_admin_password" {
-  type    = string
-  default = ""
+  type      = string
+  default   = ""
   sensitive = true
 }
 
@@ -46,11 +46,11 @@ variable "logrotate_size" {
 }
 
 variable "reboot" {
-  type = bool
+  type    = bool
   default = true
 }
 
 variable "win_version" {
-  type = string
+  type    = string
   default = "2022"
 }

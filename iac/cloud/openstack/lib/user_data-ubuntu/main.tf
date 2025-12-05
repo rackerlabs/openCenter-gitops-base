@@ -17,7 +17,7 @@ data "cloudinit_config" "config" {
       pf9_region : var.pf9_region
       pf9_tenant : var.pf9_tenant
       pf9ctl_setup_download_url : var.pf9ctl_setup_download_url
-      reboot     : var.reboot
+      reboot : var.reboot
     })
   }
 }

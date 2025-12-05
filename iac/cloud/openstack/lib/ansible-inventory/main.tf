@@ -7,7 +7,7 @@ resource "local_file" "ansible_inventory" {
       master_nodes    = var.master_nodes
       ssh_user        = var.ssh_user
   })
-  filename   = "infra-inventory"
+  filename = "infra-inventory"
 
-    depends_on = [ var.master_nodes, var.worker_nodes ]
+  depends_on = [var.master_nodes, var.worker_nodes]
 }

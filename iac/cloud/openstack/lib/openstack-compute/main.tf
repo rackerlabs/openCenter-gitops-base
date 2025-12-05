@@ -42,7 +42,7 @@ resource "openstack_compute_instance_v2" "node" {
     destination_type      = var.node_bfv_destination_type
     delete_on_termination = var.node_bfv_delete_on_termination
   }
-  
+
   dynamic "block_device" {
     for_each = var.additional_block_devices
     content {

@@ -19,28 +19,41 @@ resource "openstack_networking_port_v2" "node" {
 
 resource "openstack_compute_instance_v2" "node" {
   name              = "${substr(var.naming_prefix, 0, 8)}${var.node_type}${count.index}"
-  config_drive      = true  # Windows needs config drive
+  config_drive      = true # Windows needs config drive
   count             = var.node_count
   flavor_name       = var.flavor_name
   image_id          = var.image_id
   image_name        = var.image_name
   user_data         = var.user_data
   availability_zone = var.availability_zone
-#   key_pair          = var.key_pair.name
+  #   key_pair          = var.key_pair.name
 
-#   metadata = {
-#     bastion      = var.bastion_floating_ip
-#     user         = var.windows_user
-#     admin_pass   = var.admin_password  # Windows admin password
-#   }
+  #   metadata = {
+  #     bastion      = var.bastion_floating_ip
+  #     user         = var.windows_user
+  #     admin_pass   = var.admin_password  # Windows admin password
+  #   }
 
   block_device {
     uuid                  = var.image_id
     source_type           = "image"
-    volume_size           = var.node_bfv_size
+    volume_size           = var.node_bfv_volume_size
     boot_index            = 0
-    destination_type      = var.node_bfv_type
+    destination_type      = var.node_bfv_destination_type
     delete_on_termination = true
+  }
+
+  dynamic "block_device" {
+    for_each = var.additional_block_devices
+    content {
+      uuid                  = block_device.value.source_type == "blank" ? "" : null
+      source_type           = block_device.value.source_type
+      volume_size           = block_device.value.volume_size
+      volume_type           = block_device.value.destination_type == "local" ? "" : block_device.value.volume_type
+      boot_index            = block_device.value.boot_index
+      destination_type      = block_device.value.destination_type
+      delete_on_termination = block_device.value.delete_on_termination
+    }
   }
 
   network {
@@ -52,36 +65,36 @@ resource "openstack_compute_instance_v2" "node" {
   }
 
   # Windows-specific provisioner using WinRM
-#   provisioner "remote-exec" {
-#     when       = destroy
-#     on_failure = continue
-#     inline     = [
-#       "powershell.exe -ExecutionPolicy Bypass -File C:\\remove_node.ps1"
-#     ]
+  #   provisioner "remote-exec" {
+  #     when       = destroy
+  #     on_failure = continue
+  #     inline     = [
+  #       "powershell.exe -ExecutionPolicy Bypass -File C:\\remove_node.ps1"
+  #     ]
 
-#     connection {
-#       type     = "winrm"
-#       user     = self.metadata.user
-#       password = self.metadata.admin_pass
-#       host     = self.access_ip_v4
-#       port     = 5985
-#       https    = false
-#       insecure = true
-#       timeout  = "10m"  # Windows boot times are typically longer
-      
-#       # If using bastion/jump host for Windows
-#       # Note: WinRM through bastion is more complex and may require additional setup
-#       bastion_host     = var.use_bastion ? self.metadata.bastion : null
-#       bastion_user     = var.use_bastion ? self.metadata.user : null
-#       bastion_password = var.use_bastion ? var.bastion_password : null
-#     }
-#   }
+  #     connection {
+  #       type     = "winrm"
+  #       user     = self.metadata.user
+  #       password = self.metadata.admin_pass
+  #       host     = self.access_ip_v4
+  #       port     = 5985
+  #       https    = false
+  #       insecure = true
+  #       timeout  = "10m"  # Windows boot times are typically longer
+
+  #       # If using bastion/jump host for Windows
+  #       # Note: WinRM through bastion is more complex and may require additional setup
+  #       bastion_host     = var.use_bastion ? self.metadata.bastion : null
+  #       bastion_user     = var.use_bastion ? self.metadata.user : null
+  #       bastion_password = var.use_bastion ? var.bastion_password : null
+  #     }
+  #   }
 
   lifecycle {
     ignore_changes = [
       user_data,
       image_id,
-      metadata.admin_pass  # Ignore password changes
+      metadata.admin_pass # Ignore password changes
     ]
   }
 }

@@ -4,4 +4,3 @@ kind: Kustomization
 namespace: keycloak
 resources:
   - "keycloak-cr.yaml"
-  - "rbac/"
