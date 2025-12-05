@@ -1,7 +1,7 @@
 ---
 # Source: kyverno-policies/templates/baseline/disallow-host-process.yaml
 apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+kind: Policy
 metadata:
   name: disallow-host-process
   annotations:
@@ -16,8 +16,8 @@ metadata:
       access to the Windows node. Privileged access to the host is disallowed in the baseline
       policy. HostProcess pods are an alpha feature as of Kubernetes v1.22. This policy ensures
       the `hostProcess` field, if present, is set to `false`.
-
-  labels:
+    
+  labels: 
     app.kubernetes.io/component: kyverno
     app.kubernetes.io/instance: kyverno-policies
     app.kubernetes.io/managed-by: Helm
@@ -32,9 +32,9 @@ spec:
     - name: host-process-containers
       match:
         any:
-          - resources:
-              kinds:
-                - Pod
+        - resources:
+            kinds:
+              - Pod
       validate:
         failureAction: Audit
         allowExistingViolations: true

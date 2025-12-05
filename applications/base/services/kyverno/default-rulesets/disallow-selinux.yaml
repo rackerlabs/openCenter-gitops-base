@@ -1,7 +1,7 @@
 ---
 # Source: kyverno-policies/templates/baseline/disallow-selinux.yaml
 apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+kind: Policy
 metadata:
   name: disallow-selinux
   annotations:
@@ -14,8 +14,8 @@ metadata:
     policies.kyverno.io/description: >-
       SELinux options can be used to escalate privileges and should not be allowed. This policy
       ensures that the `seLinuxOptions` field is undefined.
-
-  labels:
+    
+  labels: 
     app.kubernetes.io/component: kyverno
     app.kubernetes.io/instance: kyverno-policies
     app.kubernetes.io/managed-by: Helm
@@ -30,9 +30,9 @@ spec:
     - name: selinux-type
       match:
         any:
-          - resources:
-              kinds:
-                - Pod
+        - resources:
+            kinds:
+              - Pod
       validate:
         failureAction: Audit
         allowExistingViolations: true
@@ -61,9 +61,9 @@ spec:
     - name: selinux-user-role
       match:
         any:
-          - resources:
-              kinds:
-                - Pod
+        - resources:
+            kinds:
+              - Pod
       validate:
         failureAction: Audit
         allowExistingViolations: true

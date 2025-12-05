@@ -1,7 +1,7 @@
 ---
 # Source: kyverno-policies/templates/restricted/disallow-privilege-escalation.yaml
 apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+kind: Policy
 metadata:
   name: disallow-privilege-escalation
   annotations:
@@ -9,20 +9,20 @@ metadata:
     policies.kyverno.io/category: Pod Security Standards (Restricted)
     policies.kyverno.io/severity: "high"
     policies.kyverno.io/subject: Pod
-    kyverno.io/kyverno-version: v1.15.2
+    kyverno.io/kyverno-version: v1.16.0
     kyverno.io/kubernetes-version: ">=1.25.0-0"
     policies.kyverno.io/description: >-
       Privilege escalation, such as via set-user-ID or set-group-ID file mode, should not be allowed.
       This policy ensures the `allowPrivilegeEscalation` field is set to `false`.
-
-  labels:
+    
+  labels: 
     app.kubernetes.io/component: kyverno
     app.kubernetes.io/instance: kyverno-policies
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kyverno-policies
     app.kubernetes.io/part-of: kyverno-policies
-    app.kubernetes.io/version: "3.5.2"
-    helm.sh/chart: kyverno-policies-3.5.2
+    app.kubernetes.io/version: "3.6.0"
+    helm.sh/chart: kyverno-policies-3.6.0
 spec:
   background: true
   failurePolicy: Ignore
@@ -30,9 +30,9 @@ spec:
     - name: privilege-escalation
       match:
         any:
-          - resources:
-              kinds:
-                - Pod
+        - resources:
+            kinds:
+              - Pod
       validate:
         failureAction: Audit
         allowExistingViolations: true
@@ -45,11 +45,11 @@ spec:
         pattern:
           spec:
             =(ephemeralContainers):
-              - securityContext:
-                  allowPrivilegeEscalation: "false"
+            - securityContext:
+                allowPrivilegeEscalation: "false"
             =(initContainers):
-              - securityContext:
-                  allowPrivilegeEscalation: "false"
+            - securityContext:
+                allowPrivilegeEscalation: "false"
             containers:
-              - securityContext:
-                  allowPrivilegeEscalation: "false"
+            - securityContext:
+                allowPrivilegeEscalation: "false"

@@ -1,7 +1,7 @@
 ---
 # Source: kyverno-policies/templates/restricted/disallow-capabilities-strict.yaml
 apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+kind: Policy
 metadata:
   name: disallow-capabilities-strict
   annotations:
@@ -9,21 +9,21 @@ metadata:
     policies.kyverno.io/category: Pod Security Standards (Restricted)
     policies.kyverno.io/severity: "high"
     policies.kyverno.io/minversion: 1.6.0
-    kyverno.io/kyverno-version: v1.15.2
+    kyverno.io/kyverno-version: v1.16.0
     kyverno.io/kubernetes-version: ">=1.25.0-0"
     policies.kyverno.io/subject: Pod
     policies.kyverno.io/description: >-
       Adding capabilities other than `NET_BIND_SERVICE` is disallowed. In addition,
       all containers must explicitly drop `ALL` capabilities.
-
-  labels:
+    
+  labels: 
     app.kubernetes.io/component: kyverno
     app.kubernetes.io/instance: kyverno-policies
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kyverno-policies
     app.kubernetes.io/part-of: kyverno-policies
-    app.kubernetes.io/version: "3.5.2"
-    helm.sh/chart: kyverno-policies-3.5.2
+    app.kubernetes.io/version: "3.6.0"
+    helm.sh/chart: kyverno-policies-3.6.0
 spec:
   background: true
   failurePolicy: Ignore
@@ -31,14 +31,14 @@ spec:
     - name: require-drop-all
       match:
         any:
-          - resources:
-              kinds:
-                - Pod
+        - resources:
+            kinds:
+              - Pod
       preconditions:
         all:
-          - key: "{{ request.operation || 'BACKGROUND' }}"
-            operator: NotEquals
-            value: DELETE
+        - key: "{{ request.operation || 'BACKGROUND' }}"
+          operator: NotEquals
+          value: DELETE
       validate:
         failureAction: Audit
         allowExistingViolations: true
@@ -49,20 +49,20 @@ spec:
             deny:
               conditions:
                 all:
-                  - key: ALL
-                    operator: AnyNotIn
-                    value: "{{ element.securityContext.capabilities.drop[] || `[]` }}"
+                - key: ALL
+                  operator: AnyNotIn
+                  value: "{{ element.securityContext.capabilities.drop[] || `[]` }}"
     - name: adding-capabilities-strict
       match:
         any:
-          - resources:
-              kinds:
-                - Pod
+        - resources:
+            kinds:
+              - Pod
       preconditions:
         all:
-          - key: "{{ request.operation || 'BACKGROUND' }}"
-            operator: NotEquals
-            value: DELETE
+        - key: "{{ request.operation || 'BACKGROUND' }}"
+          operator: NotEquals
+          value: DELETE
       validate:
         failureAction: Audit
         allowExistingViolations: true
@@ -73,8 +73,8 @@ spec:
             deny:
               conditions:
                 all:
-                  - key: "{{ element.securityContext.capabilities.add[] || `[]` }}"
-                    operator: AnyNotIn
-                    value:
-                      - NET_BIND_SERVICE
-                      - ""
+                - key: "{{ element.securityContext.capabilities.add[] || `[]` }}"
+                  operator: AnyNotIn
+                  value:
+                  - NET_BIND_SERVICE
+                  - ''

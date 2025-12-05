@@ -1,7 +1,7 @@
 ---
 # Source: kyverno-policies/templates/restricted/restrict-seccomp-strict.yaml
 apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+kind: Policy
 metadata:
   name: restrict-seccomp-strict
   annotations:
@@ -9,7 +9,7 @@ metadata:
     policies.kyverno.io/category: Pod Security Standards (Restricted)
     policies.kyverno.io/severity: "high"
     policies.kyverno.io/subject: Pod
-    kyverno.io/kyverno-version: v1.15.2
+    kyverno.io/kyverno-version: v1.16.0
     kyverno.io/kubernetes-version: ">=1.25.0-0"
     policies.kyverno.io/description: >-
       The seccomp profile in the Restricted group must not be explicitly set to Unconfined
@@ -17,15 +17,15 @@ metadata:
       requiring Kubernetes v1.19 or later, ensures that seccomp is
       set to `RuntimeDefault` or `Localhost`. A known issue prevents a policy such as this
       using `anyPattern` from being persisted properly in Kubernetes 1.23.0-1.23.2.
-
-  labels:
+    
+  labels: 
     app.kubernetes.io/component: kyverno
     app.kubernetes.io/instance: kyverno-policies
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kyverno-policies
     app.kubernetes.io/part-of: kyverno-policies
-    app.kubernetes.io/version: "3.5.2"
-    helm.sh/chart: kyverno-policies-3.5.2
+    app.kubernetes.io/version: "3.6.0"
+    helm.sh/chart: kyverno-policies-3.6.0
 spec:
   background: true
   failurePolicy: Ignore
@@ -33,9 +33,9 @@ spec:
     - name: check-seccomp-strict
       match:
         any:
-          - resources:
-              kinds:
-                - Pod
+        - resources:
+            kinds:
+              - Pod
       validate:
         failureAction: Audit
         allowExistingViolations: true
@@ -47,32 +47,32 @@ spec:
           spec.ephemeralContainers[*].securityContext.seccompProfile.type
           must be set to `RuntimeDefault` or `Localhost`.
         anyPattern:
-          - spec:
-              securityContext:
+        - spec:
+            securityContext:
+              seccompProfile:
+                type: "RuntimeDefault | Localhost"
+            =(ephemeralContainers):
+            - =(securityContext):
+                =(seccompProfile):
+                  =(type): "RuntimeDefault | Localhost"
+            =(initContainers):
+            - =(securityContext):
+                =(seccompProfile):
+                  =(type): "RuntimeDefault | Localhost"
+            containers:
+            - =(securityContext):
+                =(seccompProfile):
+                  =(type): "RuntimeDefault | Localhost"
+        - spec:
+            =(ephemeralContainers):
+            - securityContext:
                 seccompProfile:
                   type: "RuntimeDefault | Localhost"
-              =(ephemeralContainers):
-                - =(securityContext):
-                    =(seccompProfile):
-                      =(type): "RuntimeDefault | Localhost"
-              =(initContainers):
-                - =(securityContext):
-                    =(seccompProfile):
-                      =(type): "RuntimeDefault | Localhost"
-              containers:
-                - =(securityContext):
-                    =(seccompProfile):
-                      =(type): "RuntimeDefault | Localhost"
-          - spec:
-              =(ephemeralContainers):
-                - securityContext:
-                    seccompProfile:
-                      type: "RuntimeDefault | Localhost"
-              =(initContainers):
-                - securityContext:
-                    seccompProfile:
-                      type: "RuntimeDefault | Localhost"
-              containers:
-                - securityContext:
-                    seccompProfile:
-                      type: "RuntimeDefault | Localhost"
+            =(initContainers):
+            - securityContext:
+                seccompProfile:
+                  type: "RuntimeDefault | Localhost"
+            containers:
+            - securityContext:
+                seccompProfile:
+                  type: "RuntimeDefault | Localhost"

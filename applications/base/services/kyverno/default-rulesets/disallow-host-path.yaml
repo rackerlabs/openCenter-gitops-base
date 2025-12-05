@@ -1,7 +1,7 @@
 ---
 # Source: kyverno-policies/templates/baseline/disallow-host-path.yaml
 apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+kind: Policy
 metadata:
   name: disallow-host-path
   annotations:
@@ -15,8 +15,8 @@ metadata:
       HostPath volumes let Pods use host directories and volumes in containers.
       Using host resources can be used to access shared data or escalate privileges
       and should not be allowed. This policy ensures no hostPath volumes are in use.
-
-  labels:
+    
+  labels: 
     app.kubernetes.io/component: kyverno
     app.kubernetes.io/instance: kyverno-policies
     app.kubernetes.io/managed-by: Helm
@@ -31,9 +31,9 @@ spec:
     - name: host-path
       match:
         any:
-          - resources:
-              kinds:
-                - Pod
+        - resources:
+            kinds:
+              - Pod
       validate:
         failureAction: Audit
         allowExistingViolations: true
