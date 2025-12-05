@@ -1,0 +1,37 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: vsphere-csi
+  namespace: vmware-system-csi
+spec:
+  releaseName: vsphere-csi
+  interval: 5m
+  timeout: 5m
+  driftDetection:
+    mode: enabled
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    remediation:
+      retries: 0
+      remediateLastFailure: false
+  targetNamespace: vmware-system-csi
+  chart:
+    spec:
+      chart: vsphere-csi
+      version: 3.8.1
+      sourceRef:
+        kind: HelmRepository
+        name: vsphere-tmm
+        namespace: vmware-system-csi
+  valuesFrom:
+    - kind: Secret
+      name: vsphere-csi-values-base
+      valuesKey: hardened.yaml
+    - kind: Secret
+      name: vsphere-csi-values-override
+      valuesKey: override.yaml
+      optional: true
