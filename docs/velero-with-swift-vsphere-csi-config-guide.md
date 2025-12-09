@@ -81,8 +81,10 @@ CSI snapshots provide sufficient backup coverage for current needs.
 **Solution**: Both `OS_SWIFT_TEMP_URL_KEY` and `OS_SWIFT_TEMP_URL_DIGEST` are required in the credentials secret. These must match the temp URL key configured on the Swift container.
 
 ```bash
+TEMP_URL_KEY=$(head /dev/urandom | tr -dc 'a-z0-9' | head -c "35")
+echo "$TEMP_URL_KEY"
 # Set temp URL key on Swift container (if not already set)
-swift post -m "Temp-URL-Key: <your-key>"
+openstack --os-cloud flex-dfw3 container set --property "Temp-URL-Key=$TEMP_URL_KEY" 
 ```
 
 The `OS_SWIFT_TEMP_URL_KEY` value must match the key set on the container, and `OS_SWIFT_TEMP_URL_DIGEST` specifies the hash algorithm (typically `sha256`).
