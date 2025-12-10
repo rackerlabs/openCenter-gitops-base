@@ -1,15 +1,15 @@
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: ingress-nginx
+namespace: vmware-system-csi
 resources:
   - "namespace.yaml"
-  - "/source.yaml"
+  - "source.yaml"
   - "helmrelease.yaml"
 secretGenerator:
-  - name: ingress-nginx-values-base
+  - name: vsphere-csi-values-base
     type: Opaque
     files:
-      - hardened.yaml=helm-values/hardened-values-4.13.0.yaml
+      - hardened.yaml=helm-values/hardened-values-3.8.1.yaml
     options:
       disableNameSuffixHash: true
