@@ -7,9 +7,9 @@ This directory contains GitOps application manifests that are deployed as part o
 ```
 applications/
 ├── base/                   # Base application configurations
-│   ├── genestack-sources/  # Genestack GitOps repository sources
 │   ├── managed-services/   # Rackspace-managed services
 │   └── services/           # Core cluster services
+│       └── observability/  # Observability stack components
 └── policies/               # Security and network policies
     ├── network-policies/   # Kubernetes network policies
     ├── pod-security-policies/ # Pod security standards
@@ -18,173 +18,52 @@ applications/
 
 ## Available Applications
 
-### Quick Reference Table
+### Core Services
 
-| Application | Category | Namespace | Purpose |
-|-------------|----------|-----------|---------|
-| **cert-manager** | Core Service | `cert-manager` | Automated certificate management |
-| **gateway-api** | Core Service | `gateway-api` | Kubernetes Gateway API implementation |
-| **ingress-nginx** | Core Service | `ingress-nginx` | NGINX-based ingress controller |
-| **keycloak** | Core Service | `keycloak` | Identity and access management |
-| **kube-prometheus-stack** | Core Service | `observability` | Complete monitoring and alerting stack |
-| **metallb** | Core Service | `metallb-system` | Bare metal load balancer |
-| **olm** | Core Service | `olm` | Operator Lifecycle Manager |
-| **opentelemetry-kube-stack** | Core Service | `observability` | Complete OpenTelemetry observability stack |
-| **sealed-secrets** | Core Service | `sealed-secrets` | Encrypted secrets management |
-| **velero** | Core Service | `velero` | Cluster backup and disaster recovery |
-| **alert-proxy** | Managed Service | `rackspace` | Rackspace alert aggregation |
-| **genestack-repo** | Source Repository | `flux-system` | Genestack OpenStack deployment |
-| **openstack-helm** | Source Repository | `flux-system` | OpenStack Helm charts |
-| **network-policies** | Security Policy | Various | Kubernetes network segmentation |
-| **pod-security-policies** | Security Policy | Various | Pod security standards enforcement |
-| **rbac** | Security Policy | Various | Role-based access control |
+| Service | Namespace | Purpose | Documentation |
+|---------|-----------|---------|---------------|
+| **[cert-manager](applications/base/services/cert-manager/)** | `cert-manager` | Automated TLS certificate management | [README](applications/base/services/cert-manager/README.md) |
+| **[external-snapshotter](applications/base/services/external-snapshotter/)** | `kube-system` | Volume snapshot management | [README](applications/base/services/external-snapshotter/README.md) |
+| **[gateway-api](applications/base/services/gateway-api/)** | `gateway-system` | Next-generation ingress API | [README](applications/base/services/gateway-api/README.md) |
+| **[harbor](applications/base/services/harbor/)** | `harbor` | Container registry with security scanning | [README](applications/base/services/harbor/README.md) |
+| **[headlamp](applications/base/services/headlamp/)** | `headlamp` | Modern Kubernetes dashboard | [README](applications/base/services/headlamp/README.md) |
+| **[keycloak](applications/base/services/keycloak/)** | `keycloak` | Identity and access management | [README](applications/base/services/keycloak/README.md) |
+| **[kyverno](applications/base/services/kyverno/)** | `kyverno` | Kubernetes-native policy engine | [README](applications/base/services/kyverno/README.md) |
+| **[longhorn](applications/base/services/longhorn/)** | `longhorn-system` | Distributed block storage | [README](applications/base/services/longhorn/README.md) |
+| **[metallb](applications/base/services/metallb/)** | `metallb-system` | Load balancer for bare-metal clusters | [README](applications/base/services/metallb/README.md) |
+| **[olm](applications/base/services/olm/)** | `olm` | Operator Lifecycle Manager | [README](applications/base/services/olm/README.md) |
+| **[openstack-ccm](applications/base/services/openstack-ccm/)** | `kube-system` | OpenStack Cloud Controller Manager | [README](applications/base/services/openstack-ccm/README.md) |
+| **[openstack-csi](applications/base/services/openstack-csi/)** | `kube-system` | OpenStack Cinder CSI driver | [README](applications/base/services/openstack-csi/README.md) |
+| **[postgres-operator](applications/base/services/postgres-operator/)** | `postgres-operator` | PostgreSQL cluster management | [README](applications/base/services/postgres-operator/README.md) |
+| **[rbac-manager](applications/base/services/rbac-manager/)** | `rbac-manager` | RBAC management automation | [README](applications/base/services/rbac-manager/README.md) |
+| **[sealed-secrets](applications/base/services/sealed-secrets/)** | `kube-system` | GitOps-friendly secret management | [README](applications/base/services/sealed-secrets/README.md) |
+| **[velero](applications/base/services/velero/)** | `velero` | Backup and disaster recovery | [README](applications/base/services/velero/README.md) |
+| **[vsphere-csi](applications/base/services/vsphere-csi/)** | `vmware-system-csi` | vSphere storage integration | [README](applications/base/services/vsphere-csi/README.md) |
+| **[weave-gitops](applications/base/services/weave-gitops/)** | `flux-system` | GitOps dashboard for Flux | [README](applications/base/services/weave-gitops/README.md) |
 
-### Core Services (`base/services/`)
+### Observability Stack
 
-#### **cert-manager**
-- **Purpose**: Automated certificate management for Kubernetes
-- **Source**: Jetstack Helm repository (`https://charts.jetstack.io`)
-- **Namespace**: `cert-manager`
-- **Features**:
-  - Let's Encrypt integration
-  - Automatic certificate renewal
-  - TLS certificate provisioning for ingress
+| Component | Namespace | Purpose | Documentation |
+|-----------|-----------|---------|---------------|
+| **[observability](applications/base/services/observability/)** | `observability` | Complete observability stack | [README](applications/base/services/observability/README.md) |
+| **[kube-prometheus-stack](applications/base/services/observability/kube-prometheus-stack/)** | `observability` | Prometheus, Grafana, Alertmanager | [README](applications/base/services/observability/kube-prometheus-stack/README.md) |
+| **[loki](applications/base/services/observability/loki/)** | `observability` | Log aggregation and storage | [README](applications/base/services/observability/loki/README.md) |
+| **[tempo](applications/base/services/observability/tempo/)** | `observability` | Distributed tracing backend | [README](applications/base/services/observability/tempo/README.md) |
+| **[opentelemetry-kube-stack](applications/base/services/observability/opentelemetry-kube-stack/)** | `observability` | OpenTelemetry collection framework | [README](applications/base/services/observability/opentelemetry-kube-stack/README.md) |
 
-#### **gateway-api**
-- **Purpose**: Kubernetes Gateway API implementation
-- **Namespace**: `gateway-api`
-- **Features**:
-  - Next-generation ingress and traffic management
-  - Advanced routing capabilities
-  - Service mesh integration ready
+### Managed Services
 
-#### **ingress-nginx**
-- **Purpose**: NGINX-based ingress controller
-- **Namespace**: `ingress-nginx`
-- **Features**:
-  - HTTP/HTTPS load balancing
-  - SSL termination
-  - Path-based and host-based routing
+| Service | Namespace | Purpose | Documentation |
+|---------|-----------|---------|---------------|
+| **[alert-proxy](applications/base/managed-services/alert-proxy/)** | `rackspace` | Rackspace alert aggregation | [README](applications/base/managed-services/alert-proxy/README.md) |
 
-#### **keycloak**
-- **Purpose**: Identity and access management
-- **Namespace**: `keycloak`
-- **Features**:
-  - Single sign-on (SSO)
-  - OAuth 2.0 and OpenID Connect
-  - Multi-realm support
-  - LDAP/Active Directory integration
+### Security Policies
 
-#### **kube-prometheus-stack**
-- **Purpose**: Complete monitoring and alerting stack
-- **Namespace**: `observability`
-- **Components**:
-  - Prometheus for metrics collection
-  - Grafana for visualization
-  - Alertmanager for alert handling
-  - Node Exporter for node metrics
-- **Features**:
-  - Pre-configured dashboards
-  - Alert rules for common scenarios
-  - ServiceMonitor auto-discovery
-
-#### **metallb**
-- **Purpose**: Bare metal load balancer for Kubernetes
-- **Namespace**: `metallb-system`
-- **Features**:
-  - Layer 2 and BGP load balancing
-  - IP address pool management
-  - Service type LoadBalancer support
-
-#### **olm**
-- **Purpose**: Operator Lifecycle Manager
-- **Namespace**: `olm`
-- **Features**:
-  - Operator installation and management
-  - Dependency resolution
-  - Automatic updates
-
-#### **opentelemetry-kube-stack**
-- **Purpose**: Complete OpenTelemetry observability stack for Kubernetes
-- **Source**: OpenTelemetry Kube Stack Helm repository (`https://charts.opentelemetry.io`)
-- **Namespace**: `observability`
-- **Features**:
-  - OpenTelemetry Operator for auto-instrumentation and collector management
-  - Pre-configured OpenTelemetry Collector for metrics, traces, and logs
-  - Automatic service discovery and monitoring
-  - Multi-language auto-instrumentation support (Java, Node.js, Python, .NET, Go)
-  - Integration with Prometheus and Jaeger for complete observability
-  - Custom resource definitions for OpenTelemetry configuration
-
-#### **sealed-secrets**
-- **Purpose**: Encrypted secrets management
-- **Namespace**: `sealed-secrets`
-- **Features**:
-  - GitOps-friendly secret encryption
-  - Public/private key encryption
-  - Automatic secret decryption in cluster
-
-#### **velero**
-- **Purpose**: Cluster backup and disaster recovery
-- **Namespace**: `velero`
-- **Features**:
-  - Backup and restore Kubernetes resources
-  - Persistent volume snapshots
-  - Scheduled backups
-  - Cross-cluster migration
-
-### Managed Services (`base/managed-services/`)
-
-#### **alert-proxy**
-- **Purpose**: Rackspace alert aggregation and forwarding
-- **Namespace**: `rackspace`
-- **Features**:
-  - Alert collection from monitoring systems
-  - Integration with Rackspace support systems
-  - Alert routing and escalation
-
-### Source Repositories (`base/genestack-sources/`)
-
-#### **genestack-repo**
-- **Purpose**: GitOps source for Genestack OpenStack deployment
-- **Source**: `https://github.com/rackerlabs/genestack.git`
-- **Version**: `release-2025.2.6`
-- **Features**:
-  - OpenStack deployment automation
-  - Helm chart aggregation
-  - GitOps workflow integration
-
-#### **openstack-helm**
-- **Purpose**: OpenStack Helm charts repository
-- **Features**:
-  - Production-ready OpenStack charts
-  - Multi-node deployment support
-  - HA configuration templates
-
-### Security Policies (`policies/`)
-
-#### **network-policies**
-- **Purpose**: Kubernetes network segmentation
-- **Status**: Template directory (placeholder.txt)
-- **Planned Features**:
-  - Namespace isolation
-  - Ingress/egress traffic control
-  - Zero-trust networking
-
-#### **pod-security-policies**
-- **Purpose**: Pod security standards enforcement
-- **Status**: Template directory (placeholder.txt)
-- **Planned Features**:
-  - Security context enforcement
-  - Privilege escalation prevention
-  - Container security standards
-
-#### **rbac**
-- **Purpose**: Role-based access control
-- **Features**:
-  - Service account management
-  - Role and ClusterRole definitions
-  - Principle of least privilege
+| Policy | Scope | Purpose |
+|--------|-------|---------|
+| **[network-policies](applications/policies/network-policies/)** | Various | Kubernetes network segmentation |
+| **[pod-security-policies](applications/policies/pod-security-policies/)** | Various | Pod security standards enforcement |
+| **[rbac](applications/policies/rbac/)** | Various | Role-based access control |
 
 ## Deployment Architecture
 
@@ -203,14 +82,22 @@ All applications follow these patterns:
 - **Remediation**: 3-retry policy with last-failure remediation
 
 ### Namespace Organization
-- `cert-manager`: Certificate management
-- `ingress-nginx`: Ingress controllers
-- `observability`: Monitoring and alerting
-- `metallb-system`: Load balancing
-- `velero`: Backup and recovery
+- `cert-manager`: TLS certificate management
+- `gateway-system`: Gateway API controllers
+- `harbor`: Container registry and security scanning
+- `headlamp`: Kubernetes dashboard
 - `keycloak`: Identity and access management
+- `kyverno`: Policy engine and governance
+- `longhorn-system`: Distributed storage
+- `metallb-system`: Load balancing for bare-metal
+- `observability`: Complete monitoring, logging, and tracing stack
+- `olm`: Operator lifecycle management
+- `postgres-operator`: PostgreSQL database management
+- `rbac-manager`: RBAC automation
+- `velero`: Backup and disaster recovery
+- `vmware-system-csi`: vSphere storage integration
+- `flux-system`: GitOps controllers and dashboards
 - `rackspace`: Managed services
-- `gateway-api`: Next-gen traffic management
 
 ## Usage
 
@@ -253,18 +140,59 @@ Applications can be customized through:
 
 ## Monitoring and Observability
 
-The kube-prometheus-stack provides comprehensive monitoring:
+The observability stack provides comprehensive monitoring, logging, and tracing:
 
-- **Metrics**: Application and infrastructure metrics via Prometheus
-- **Dashboards**: Pre-configured Grafana dashboards
-- **Alerts**: Production-ready alerting rules
-- **Logs**: Integration with cluster logging stack
+### Metrics and Monitoring
+- **[Kube-Prometheus-Stack](applications/base/services/observability/kube-prometheus-stack/)**: Prometheus, Grafana, and Alertmanager
+- **Metrics Collection**: Application and infrastructure metrics
+- **Dashboards**: Pre-configured Grafana dashboards for Kubernetes and applications
+- **Alerting**: Production-ready alerting rules with notification routing
+
+### Logging
+- **[Loki](applications/base/services/observability/loki/)**: Cost-effective log aggregation and storage
+- **Log Collection**: Kubernetes and application logs via OpenTelemetry
+- **Log Querying**: LogQL for powerful log filtering and analysis
+- **Retention**: Configurable log retention policies
+
+### Tracing
+- **[Tempo](applications/base/services/observability/tempo/)**: Distributed tracing backend
+- **Trace Collection**: OpenTelemetry-based trace ingestion
+- **Trace Analysis**: TraceQL for trace querying and analysis
+- **Integration**: Unified view with metrics and logs in Grafana
+
+### Data Collection
+- **[OpenTelemetry](applications/base/services/observability/opentelemetry-kube-stack/)**: Unified observability framework
+- **Auto-instrumentation**: Automatic telemetry collection for applications
+- **Data Processing**: Transformation, filtering, and enrichment pipelines
+- **Multi-backend Export**: Support for multiple observability backends
 
 ## Support and Maintenance
 
-- **Updates**: Managed through GitOps workflow
-- **Backup**: Velero provides application backup/restore
-- **Security**: Regular security updates via Flux automation
-- **Monitoring**: Health checks via Prometheus/Grafana
+- **Updates**: Managed through GitOps workflow with Flux CD
+- **Backup**: [Velero](applications/base/services/velero/) provides application and persistent volume backup/restore
+- **Security**: Regular security updates via Flux automation and [Kyverno](applications/base/services/kyverno/) policies
+- **Monitoring**: Health checks via [Prometheus/Grafana](applications/base/services/observability/)
+- **Storage**: [Longhorn](applications/base/services/longhorn/) for distributed block storage or [vSphere CSI](applications/base/services/vsphere-csi/)/[OpenStack CSI](applications/base/services/openstack-csi/) for cloud storage
+- **Secrets Management**: [Sealed Secrets](applications/base/services/sealed-secrets/) for GitOps-friendly secret encryption
+- **Identity Management**: [Keycloak](applications/base/services/keycloak/) for OIDC authentication and authorization
+
+## Documentation
+
+For detailed configuration and troubleshooting information, see the individual service documentation:
+
+- **Service Templates**: [docs/templates/](docs/templates/) - Templates for creating new service documentation
+- **Configuration Guides**: Each service directory contains comprehensive README files with:
+  - Configuration options and examples
+  - Cluster-specific override guidance
+  - Verification and troubleshooting steps
+  - References to upstream documentation
+
+## Getting Started
+
+1. **Review Service Documentation**: Check individual service README files for configuration requirements
+2. **Customize Overrides**: Create cluster-specific configuration overrides as needed
+3. **Deploy via GitOps**: Commit changes to trigger Flux reconciliation
+4. **Monitor Deployment**: Use [Weave GitOps](applications/base/services/weave-gitops/) or [Headlamp](applications/base/services/headlamp/) dashboards to monitor deployment status
+5. **Verify Services**: Follow verification steps in each service's documentation
 
 For application-specific documentation, see individual application directories and their respective upstream documentation.
