@@ -1,0 +1,9 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: strimzi-kafka-operator
+spec:
+  url: oci://quay.io/strimzi-helm
+  interval: 1h
+  type: oci

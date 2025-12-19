@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - "namespace.yaml"
+  - "source.yaml"
+  - "helmrelease.yaml"
+secretGenerator:
+  - name: kafka-api-values-base
+    namespace: kafka-system
+    type: Opaque
+    files:
+      - hardened.yaml=helm-values/hardened-values-0.49.1.yaml
+    options:
+      disableNameSuffixHash: true
