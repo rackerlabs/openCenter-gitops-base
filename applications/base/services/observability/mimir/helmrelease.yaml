@@ -1,0 +1,36 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: mimir
+  namespace: observability
+spec:
+  interval: 5m
+  timeout: 10m
+  driftDetection:
+    mode: enabled
+  install:
+    remediation:
+      retries: 0
+      remediateLastFailure: false
+  upgrade:
+    remediation:
+      retries: 0
+      remediateLastFailure: false
+  targetNamespace: observability
+  chart:
+    spec:
+      chart: mimir-distributed
+      version: 6.0.3
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: observability
+  valuesFrom:
+    - kind: Secret
+      name: mimir-values-base
+      valuesKey: hardened.yaml
+    - kind: Secret
+      name: mimir-values-override
+      valuesKey: override.yaml
+      optional: true

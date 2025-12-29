@@ -1,0 +1,37 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: strimzi-kafka-operator
+  namespace: kafka-system
+spec:
+  releaseName: strimzi-kafka-operator
+  interval: 5m
+  timeout: 10m
+  driftDetection:
+    mode: enabled
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    remediation:
+      retries: 0
+      remediateLastFailure: false
+  targetNamespace: kafka-system
+  chart:
+    spec:
+      chart: strimzi-kafka-operator
+      version: 0.49.1
+      sourceRef:
+        kind: HelmRepository
+        name: strimzi-kafka-operator
+        namespace: kafka-system
+  valuesFrom:
+    - kind: Secret
+      name: kafka-api-values-base
+      valuesKey: hardened.yaml
+    - kind: Secret
+      name: kafka-api-values-override
+      valuesKey: override.yaml
+      optional: true
