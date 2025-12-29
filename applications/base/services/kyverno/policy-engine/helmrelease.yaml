@@ -2,10 +2,10 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: ingress-nginx
-  namespace: ingress-nginx
+  name: kyverno
+  namespace: kyverno
 spec:
-  releaseName: ingress-nginx
+  releaseName: kyverno
   interval: 5m
   timeout: 10m
   driftDetection:
@@ -18,20 +18,20 @@ spec:
     remediation:
       retries: 0
       remediateLastFailure: false
-  targetNamespace: ingress-nginx
+  targetNamespace: kyverno
   chart:
     spec:
-      chart: ingress-nginx
-      version: 4.13.0
+      chart: kyverno
+      version: 3.6.0
       sourceRef:
         kind: HelmRepository
-        name: ingress-nginx
-        namespace: ingress-nginx
+        name: kyverno
+        namespace: kyverno
   valuesFrom:
     - kind: Secret
-      name: ingress-nginx-values-base
+      name: kyverno-values-base
       valuesKey: hardened.yaml
     - kind: Secret
-      name: ingress-nginx-values-override
+      name: kyverno-values-override
       valuesKey: override.yaml
       optional: true
