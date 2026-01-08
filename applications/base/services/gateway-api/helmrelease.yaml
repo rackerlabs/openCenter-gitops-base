@@ -32,6 +32,10 @@ spec:
       name: envoy-gateway-api-values-base
       valuesKey: hardened.yaml
     - kind: Secret
+      name: envoy-gateway-api-values-restricted
+      valuesKey: hardened-restricted.yaml
+      optional: true
+    - kind: Secret
       name: envoy-gateway-api-values-override
       valuesKey: override.yaml
       optional: true
