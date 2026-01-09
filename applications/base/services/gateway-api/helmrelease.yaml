@@ -30,7 +30,7 @@ spec:
   valuesFrom:
     - kind: Secret
       name: envoy-gateway-api-values-base
-      valuesKey: hardened.yaml
+      valuesKey: values.yaml
     - kind: Secret
       name: envoy-gateway-api-values-enterprise
       valuesKey: hardened-enterprise.yaml

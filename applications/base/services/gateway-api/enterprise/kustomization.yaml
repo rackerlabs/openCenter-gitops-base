@@ -10,7 +10,7 @@ secretGenerator:
     namespace: envoy-gateway-system
     type: Opaque
     files:
-      - hardened.yaml=../helm-values/hardened-values-v0.0.0.yaml
+      - values.yaml=../helm-values/values-v0.0.0.yaml
     options:
       disableNameSuffixHash: true
   - name: envoy-gateway-api-values-enterprise
