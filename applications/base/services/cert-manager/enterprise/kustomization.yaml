@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - "../namespace.yaml"
+  - "source.yaml"
+  - "../helmrelease.yaml"
+secretGenerator:
+  - name: cert-manager-values-base
+    namespace: cert-manager
+    type: Opaque
+    files:
+      - values.yaml=../helm-values/values-v1.18.2.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: cert-manager-values-enterprise
+    namespace: cert-manager
+    type: Opaque
+    files:
+      - hardened-enterprise.yaml=./helm-values/hardened-values-v1.18.2.yaml
+    options:
+      disableNameSuffixHash: true
