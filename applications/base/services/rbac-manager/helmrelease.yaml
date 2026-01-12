@@ -30,8 +30,12 @@ spec:
   valuesFrom:
     - kind: Secret
       name: rbac-manager-values-base
-      valuesKey: hardened.yaml
+      valuesKey: values.yaml
     - kind: Secret
       name: rbac-manager-values-override
       valuesKey: override.yaml
+      optional: true
+    - kind: Secret
+      name: rbac-manager-values-enterprise
+      valuesKey: hardened-enterprise.yaml
       optional: true

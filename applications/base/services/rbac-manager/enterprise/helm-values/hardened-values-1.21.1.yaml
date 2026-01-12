@@ -1,0 +1,7 @@
+image:
+  repository: ghcr.io/opencenter-cloud/quay.io/reactiveops/rbac-manager
+  tag: v1.9.2
+  digest: ""
+  pullPolicy: Always
+  imagePullSecrets:
+    - ghcr-secret
