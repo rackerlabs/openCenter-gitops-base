@@ -1,0 +1,12 @@
+image:
+  # -- Container image registry
+  registry: ghcr.io/opencenter-cloud
+  # -- Container image name
+  repository: ghcr.io/headlamp-k8s/headlamp
+  # -- Image pull policy. One of Always, Never, IfNotPresent
+  pullPolicy: IfNotPresent
+  # -- Container image tag, If "" uses appVersion in Chart.yaml
+  tag: "v0.35.0"
+
+imagePullSecrets:
+  - name: ghcr-secret

@@ -30,8 +30,12 @@ spec:
   valuesFrom:
     - kind: Secret
       name: headlamp-values-base
-      valuesKey: hardened.yaml
+      valuesKey: values.yaml
     - kind: Secret
       name: headlamp-values-override
       valuesKey: override.yaml
+      optional: true
+    - kind: Secret
+      name: headlamp-values-enterprise
+      valuesKey: hardened-enterprise.yaml
       optional: true
