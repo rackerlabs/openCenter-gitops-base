@@ -1,0 +1,11 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: metallb
+spec:
+  url: oci://ghcr.io/opencenter-cloud
+  interval: 1h
+  type: oci
+  secretRef:
+    name: oci-creds

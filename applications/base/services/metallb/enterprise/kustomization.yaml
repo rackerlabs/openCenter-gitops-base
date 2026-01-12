@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - "../namespace.yaml"
+  - "source.yaml"
+  - "../helmrelease.yaml"
+secretGenerator:
+  - name: metallb-values-base
+    namespace: metallb-system
+    type: Opaque
+    files:
+      - values.yaml=../helm-values/values-0.15.2.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: metallb-values-enterprise
+    namespace: metallb-system
+    type: Opaque
+    files:
+      - hardened-enterprise.yaml=./helm-values/hardened-values-0.15.2.yaml
+    options:
+      disableNameSuffixHash: true

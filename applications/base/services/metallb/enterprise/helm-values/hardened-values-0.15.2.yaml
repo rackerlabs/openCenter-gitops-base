@@ -1,0 +1,14 @@
+imagePullSecrets:
+  - name: ghcr-secret
+controller:
+  image:
+    repository: ghcr.io/opencenter-cloud/quay.io/metallb/controller
+    tag: v0.15.2
+speaker:
+  image:
+    repository: ghcr.io/opencenter-cloud/quay.io/metallb/speaker
+    tag: v0.15.2
+  frr:
+    image:
+      repository: ghcr.io/opencenter-cloud/quay.io/frrouting/frr
+      tag: 9.1.0
