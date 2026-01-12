@@ -1,0 +1,10 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: envoy-gateway-api
+  namespace: envoy-gateway-system
+spec:
+  chart:
+    spec:
+      sourceRef:
+        name: opencenter-cloud

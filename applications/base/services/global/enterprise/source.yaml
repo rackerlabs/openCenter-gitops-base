@@ -2,7 +2,7 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
-  name: headlamp
+  name: opencenter-cloud
 spec:
   url: oci://ghcr.io/opencenter-cloud
   interval: 1h

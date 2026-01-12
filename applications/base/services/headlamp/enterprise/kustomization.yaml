@@ -3,8 +3,16 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - "../namespace.yaml"
-  - "source.yaml"
   - "../helmrelease.yaml"
+  - "../../global/enterprise/source.yaml"
+patches:
+  - path: patch-helmrelease-source.yaml
+    target:
+      group: helm.toolkit.fluxcd.io
+      version: v2
+      kind: HelmRelease
+      name: headlamp
+      namespace: headlamp
 secretGenerator:
   - name: headlamp-values-base
     namespace: headlamp
