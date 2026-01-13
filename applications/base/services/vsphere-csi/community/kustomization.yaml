@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - "../namespace.yaml"
+  - "source.yaml"
+  - "../helmrelease.yaml"
+secretGenerator:
+  - name: vsphere-csi-values-base
+    namespace: vmware-system-csi
+    type: Opaque
+    files:
+      - values.yaml=../helm-values/values-3.8.1.yaml
+    options:
+      disableNameSuffixHash: true

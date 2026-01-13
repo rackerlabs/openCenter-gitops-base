@@ -1,0 +1,72 @@
+global:
+  imagePullSecrets:
+    - ghcr-secret
+controller:
+  image:
+    registry: ghcr.io/opencenter-cloud
+    repository: registry.k8s.io/csi-vsphere/driver
+    tag: v3.5.0
+  syncer:
+    image:
+      registry: ghcr.io/opencenter-cloud
+      repository: registry.k8s.io/csi-vsphere/syncer
+      tag: v3.5.0
+  attacher:
+    image:
+      registry: ghcr.io/opencenter-cloud
+      repository: registry.k8s.io/sig-storage/csi-attacher
+      tag: v4.8.1
+  provisioner:
+    image:
+      registry: ghcr.io/opencenter-cloud
+      repository: registry.k8s.io/sig-storage/csi-provisioner
+      tag: v4.0.1
+  resizer:
+    image:
+      registry: ghcr.io/opencenter-cloud
+      repository: registry.k8s.io/sig-storage/csi-resizer
+      tag: v1.14.0
+  snapshotter:
+    image:
+      registry: ghcr.io/opencenter-cloud
+      repository: registry.k8s.io/sig-storage/csi-snapshotter
+      tag: v8.2.0
+  livenessprobe:
+    image:
+      registry: ghcr.io/opencenter-cloud
+      repository: registry.k8s.io/sig-storage/livenessprobe
+      tag: v2.15.0
+node:
+  registrar:
+    image:
+      registry: ghcr.io/opencenter-cloud
+      repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
+      tag: v2.13.0
+  livenessprobe:
+    image:
+      registry: ghcr.io/opencenter-cloud
+      repository: registry.k8s.io/sig-storage/livenessprobe
+      tag: v2.15.0
+snapshot-controller:
+  controller:
+    image:
+      repository: ghcr.io/opencenter-cloud/registry.k8s.io/sig-storage/snapshot-controller
+      pullPolicy: IfNotPresent
+      tag: "v8.1.0"
+    imagePullSecrets:
+      - name: ghcr-secret
+  webhook:
+    image:
+      repository: ghcr.io/opencenter-cloud/registry.k8s.io/sig-storage/snapshot-validation-webhook
+      pullPolicy: IfNotPresent
+      tag: "v8.1.0"
+    imagePullSecrets:
+      - name: ghcr-secret
+vsphere-cpi:
+  vSphereCPI:
+    image:
+      registry: ghcr.io/opencenter-cloud
+      repository: registry.k8s.io/cloud-pv-vsphere/cloud-provider-vsphere
+      tag: v1.28.0
+      pullSecrets:
+        - ghcr-secret

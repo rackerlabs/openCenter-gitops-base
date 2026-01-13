@@ -12,8 +12,8 @@ spec:
     mode: enabled
   install:
     remediation:
-      retries: 3
-      remediateLastFailure: true
+      retries: 0
+      remediateLastFailure: false
   upgrade:
     remediation:
       retries: 0
@@ -30,8 +30,12 @@ spec:
   valuesFrom:
     - kind: Secret
       name: vsphere-csi-values-base
-      valuesKey: hardened.yaml
+      valuesKey: values.yaml
     - kind: Secret
       name: vsphere-csi-values-override
       valuesKey: override.yaml
+      optional: true
+    - kind: Secret
+      name: vsphere-csi-values-enterprise
+      valuesKey: hardened-enterprise.yaml
       optional: true
