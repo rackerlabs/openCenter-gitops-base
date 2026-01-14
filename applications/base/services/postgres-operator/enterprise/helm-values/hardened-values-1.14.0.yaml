@@ -1,0 +1,15 @@
+image:
+  registry: ghcr.io/opencenter-cloud
+  repository: ghcr.io/zalando/postgres-operator
+  tag: v1.14.0
+  pullPolicy: "IfNotPresent"
+imagePullSecrets:
+  - name: ghcr-secret
+configGeneral:
+  docker_image: ghcr.io/opencenter-cloud/ghcr.io/zalando/spilo-17:4.0-p2
+configLogicalBackup:
+  logical_backup_docker_image: "ghcr.io/opencenter-cloud/ghcr.io/zalando/postgres-operator/logical-backup:v1.13.0"
+configConnectionPooler:
+  connection_pooler_image: "ghcr.io/opencenter-cloud/registry.opensource.zalan.do/acid/pgbouncer:master-32"
+serviceAccount:
+  create: false
