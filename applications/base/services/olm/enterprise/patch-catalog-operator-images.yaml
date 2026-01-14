@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-operator
+  namespace: olm
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: catalog-operator
+          image: ghcr.io/opencenter-cloud/quay.io/operator-framework/olm@sha256:1f5e3ea51e7b721e3662cac98a25f211bfd2cf1575e79c5a6098dd20665b84a2
+          args:
+            - "--namespace"
+            - "olm"
+            - "--configmapServerImage=ghcr.io/opencenter-cloud/quay.io/operator-framework/configmap-operator-registry@sha256:3e259e1e339ad9d388cb611745312ae1c0390c9338bfd6d9965811e1978d9d1c"
+            - "--opmImage=ghcr.io/opencenter-cloud/quay.io/operator-framework/opm@sha256:81810f2296aabe3b7dc67efeb52bed5c427fdc86025f0b0c78f1e6fa0077c149"
+            - "--util-image"
+            - "ghcr.io/opencenter-cloud/quay.io/operator-framework/olm@sha256:1f5e3ea51e7b721e3662cac98a25f211bfd2cf1575e79c5a6098dd20665b84a2"
+            - "--set-workload-user-id=true"
