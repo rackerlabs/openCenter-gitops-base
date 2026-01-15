@@ -1,0 +1,9 @@
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: keycloak
+  namespace: keycloak
+spec:
+  image: ghcr.io/opencenter-cloud/quay.io/keycloak/keycloak:26.3.0
+  imagePullSecrets:
+    - name: ghcr-secret
