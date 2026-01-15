@@ -12,4 +12,4 @@ configLogicalBackup:
 configConnectionPooler:
   connection_pooler_image: "ghcr.io/opencenter-cloud/registry.opensource.zalan.do/acid/pgbouncer:master-32"
 serviceAccount:
-  create: false
+  create: true
