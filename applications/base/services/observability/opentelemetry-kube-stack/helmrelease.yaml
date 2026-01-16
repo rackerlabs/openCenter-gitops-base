@@ -30,7 +30,11 @@ spec:
   valuesFrom:
     - kind: Secret
       name: opentelemetry-kube-stack-values-base
-      valuesKey: hardened.yaml
+      valuesKey: values.yaml
+    - kind: Secret
+      name: opentelemetry-kube-stack-values-enterprise
+      valuesKey: hardened-enterprise.yaml
+      optional: true
     - kind: Secret
       name: opentelemetry-kube-stack-values-override
       valuesKey: override.yaml
