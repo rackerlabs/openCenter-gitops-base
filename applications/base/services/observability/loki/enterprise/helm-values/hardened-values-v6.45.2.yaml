@@ -1,0 +1,19 @@
+---
+global:
+  imageRegistry: "ghcr.io/opencenter-cloud"
+imagePullSecrets:
+  - name: ghcr-secret
+loki:
+  image:
+    registry: "ghcr.io/opencenter-cloud"
+    repository: grafana/loki
+    tag: 3.5.7
+sidecar:
+  image:
+    repository: kiwigrid/k8s-sidecar
+    tag: 1.30.10
+gateway:
+  image:
+    registry: "ghcr.io/opencenter-cloud"
+    repository: nginxinc/nginx-unprivileged
+    tag: 1.29-alpine
