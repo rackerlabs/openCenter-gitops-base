@@ -1,0 +1,5 @@
+---
+global:
+  imageRegistry: "ghcr.io/opencenter-cloud"
+  imagePullSecrets:
+    - name: ghcr-secret

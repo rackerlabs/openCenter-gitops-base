@@ -30,7 +30,7 @@ spec:
   valuesFrom:
     - kind: Secret
       name: kube-prometheus-stack-values-base
-      valuesKey: hardened.yaml
+      valuesKey: values.yaml
     - kind: Secret
       name: kube-prometheus-stack-values-base
       valuesKey: alertmanager-overrides.yaml
@@ -40,4 +40,16 @@ spec:
     - kind: Secret
       name: kube-prometheus-stack-values-override
       valuesKey: override.yaml
+      optional: true
+    - kind: Secret
+      name: kube-prometheus-stack-values-enterprise
+      valuesKey: hardened-enterprise.yaml
+      optional: true
+    - kind: Secret
+      name: kube-prometheus-stack-values-enterprise
+      valuesKey: hardened-alertmanager-overrides.yaml
+      optional: true
+    - kind: Secret
+      name: kube-prometheus-stack-values-enterprise
+      valuesKey: hardened-prometheus-overrides.yaml
       optional: true
