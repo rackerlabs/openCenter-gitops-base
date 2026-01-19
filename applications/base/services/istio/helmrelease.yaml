@@ -2,10 +2,10 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: kyverno
-  namespace: kyverno
+  name: istio
+  namespace: istio-system
 spec:
-  releaseName: kyverno
+  releaseName: istio
   interval: 5m
   timeout: 10m
   driftDetection:
@@ -18,24 +18,24 @@ spec:
     remediation:
       retries: 0
       remediateLastFailure: false
-  targetNamespace: kyverno
+  targetNamespace: istio-system
   chart:
     spec:
-      chart: kyverno
-      version: 3.6.0
+      chart: istiod
+      version: 1.28.3
       sourceRef:
         kind: HelmRepository
-        name: kyverno
-        namespace: kyverno
+        name: istio
+        namespace: istio-system
   valuesFrom:
     - kind: Secret
-      name: kyverno-values-base
+      name: istio-values-base
       valuesKey: values.yaml
     - kind: Secret
-      name: kyverno-values-enterprise
+      name: istio-values-enterprise
       valuesKey: hardened-enterprise.yaml
       optional: true
     - kind: Secret
-      name: kyverno-values-override
+      name: istio-values-override
       valuesKey: override.yaml
       optional: true

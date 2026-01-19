@@ -1,0 +1,6 @@
+global:
+  hub: "ghcr.io/opencenter-cloud/istio"
+  # Default tag for Istio images.
+  tag: 1.28.3
+  imagePullSecrets:
+    - ghcr-secret

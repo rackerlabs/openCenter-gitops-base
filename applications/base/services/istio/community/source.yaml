@@ -2,7 +2,7 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
-  name: kyverno
+  name: istio
 spec:
-  url: https://kyverno.github.io/kyverno/
+  url: https://istio-release.storage.googleapis.com/charts
   interval: 1h
