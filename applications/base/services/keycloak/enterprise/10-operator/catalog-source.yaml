@@ -1,0 +1,12 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: opencenter-keycloak-catalog
+  namespace: olm
+spec:
+  sourceType: grpc
+  image: ghcr.io/opencenter-cloud/olm-index/keycloak-catalog:26.4.2
+  displayName: OpenCenter Keycloak Catalog
+  publisher: OpenCenter
+  secrets:
+    - ghcr-secret
