@@ -4,6 +4,6 @@ metadata:
   name: keycloak
   namespace: keycloak
 spec:
-  image: ghcr.io/opencenter-cloud/quay.io/keycloak/keycloak:26.3.0
+  image: ghcr.io/opencenter-cloud/quay.io/keycloak/keycloak:26.4.2
   imagePullSecrets:
     - name: ghcr-secret
