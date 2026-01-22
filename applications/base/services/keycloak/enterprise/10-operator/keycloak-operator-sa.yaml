@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: keycloak-operator
+  namespace: keycloak
+imagePullSecrets:
+  - name: ghcr-secret

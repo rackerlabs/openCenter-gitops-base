@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - "../../10-operator/"
   - "./catalog-source.yaml"
+  - "./keycloak-operator-sa.yaml"
 patches:
   - target:
       group: operators.coreos.com
