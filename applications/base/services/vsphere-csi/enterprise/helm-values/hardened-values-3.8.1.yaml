@@ -37,6 +37,10 @@ controller:
       repository: registry.k8s.io/sig-storage/livenessprobe
       tag: v2.15.0
 node:
+  image:
+    registry: ghcr.io/opencenter-cloud
+    repository: registry.k8s.io/csi-vsphere/driver
+    tag: v3.5.0
   registrar:
     image:
       registry: ghcr.io/opencenter-cloud
