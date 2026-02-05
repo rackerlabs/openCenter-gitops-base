@@ -1,0 +1,24 @@
+# Istio Base Hardened Configuration
+# This file contains the base CRDs and cluster-wide resources for Istio
+
+# Global settings
+global:
+  # Default resource settings for all components
+  defaultResources:
+    requests:
+      cpu: 10m
+      memory: 128Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
+
+# Validation webhook configuration
+validationURL: ""
+
+# Base component settings
+base:
+  # Enable validation webhook
+  enableIstioConfigCRDs: true
+  
+  # Validation webhook configuration
+  validationURL: ""

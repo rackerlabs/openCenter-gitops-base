@@ -1,0 +1,126 @@
+# Istiod (Control Plane) Hardened Configuration
+# This file contains security-hardened settings for the Istio control plane
+
+# Global settings
+global:
+  # Logging configuration
+  logging:
+    level: "default:info"
+  
+  # Proxy configuration
+  proxy:
+    # Resource limits for sidecar proxies
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 2000m
+        memory: 1024Mi
+    
+    # Enable automatic sidecar injection
+    autoInject: enabled
+    
+    # Proxy log level
+    logLevel: warning
+    
+    # Component log level
+    componentLogLevel: "misc:error"
+  
+  # Tracing configuration (disabled by default)
+  tracer:
+    zipkin:
+      address: ""
+
+# Pilot (Istiod) configuration
+pilot:
+  # Number of replicas for high availability
+  replicaCount: 2
+  
+  # Resource limits
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2048Mi
+    limits:
+      cpu: 1000m
+      memory: 4096Mi
+  
+  # Auto-scaling configuration
+  autoscaleEnabled: true
+  autoscaleMin: 2
+  autoscaleMax: 5
+  
+  # CPU threshold for auto-scaling
+  cpu:
+    targetAverageUtilization: 80
+  
+  # Enable pod disruption budget
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  
+  # Security context
+  securityContext:
+    runAsUser: 1337
+    runAsGroup: 1337
+    runAsNonRoot: true
+    fsGroup: 1337
+    capabilities:
+      drop:
+        - ALL
+  
+  # Environment variables
+  env:
+    # Enable external name alias
+    PILOT_ENABLE_EXTERNAL_NAME_ALIAS: "true"
+    
+    # Enable protocol sniffing for outbound
+    PILOT_ENABLE_PROTOCOL_SNIFFING_FOR_OUTBOUND: "true"
+    
+    # Enable protocol sniffing for inbound
+    PILOT_ENABLE_PROTOCOL_SNIFFING_FOR_INBOUND: "true"
+
+# Telemetry configuration
+telemetry:
+  enabled: true
+  v2:
+    enabled: true
+    prometheus:
+      enabled: true
+
+# Security configuration
+meshConfig:
+  # Access log configuration
+  accessLogFile: /dev/stdout
+  accessLogEncoding: JSON
+  
+  # Default config for proxies
+  defaultConfig:
+    # Tracing configuration
+    tracing: {}
+    
+    # Concurrency for worker threads
+    concurrency: 2
+    
+    # Hold application until proxy is ready
+    holdApplicationUntilProxyStarts: true
+  
+  # Enable automatic mTLS
+  enableAutoMtls: true
+  
+  # Outbound traffic policy (ALLOW_ANY or REGISTRY_ONLY)
+  outboundTrafficPolicy:
+    mode: ALLOW_ANY
+  
+  # Trust domain
+  trustDomain: "cluster.local"
+
+# Revision configuration (for canary upgrades)
+revision: ""
+
+# Revision tags (for canary upgrades)
+revisionTags: []
+
+# Default revision (for canary upgrades)
+defaultRevision: ""
