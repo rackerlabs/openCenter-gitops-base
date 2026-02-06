@@ -1,0 +1,91 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: csistoragecapacities.storage.k8s.io
+spec:
+  group: storage.k8s.io
+  names:
+    kind: CSIStorageCapacity
+    listKind: CSIStorageCapacityList
+    plural: csistoragecapacities
+    singular: csistoragecapacity
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          description: CSIStorageCapacity stores the result of one CSI GetCapacity call
+          type: object
+          required:
+            - storageClassName
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation
+                of an object.'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this
+                object represents.'
+              type: string
+            metadata:
+              type: object
+            storageClassName:
+              description: StorageClassName represents the name of the StorageClass that the reported capacity applies to
+              type: string
+            nodeTopology:
+              description: NodeTopology defines which nodes have access to the storage for which capacity was reported
+              type: object
+              properties:
+                matchLabels:
+                  description: MatchLabels is a map of {key,value} pairs
+                  type: object
+                  additionalProperties:
+                    type: string
+                matchExpressions:
+                  description: MatchExpressions is a list of label selector requirements
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - key
+                      - operator
+                    properties:
+                      key:
+                        description: Key is the label key that the selector applies to
+                        type: string
+                      operator:
+                        description: Operator represents a key's relationship to a set of values
+                        type: string
+                        enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                      values:
+                        description: Values is an array of string values
+                        type: array
+                        items:
+                          type: string
+            capacity:
+              description: Capacity is the value reported by the CSI driver in its GetCapacityResponse
+              type: string
+              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+            maximumVolumeSize:
+              description: MaximumVolumeSize is the value reported by the CSI driver in its GetCapacityResponse
+              type: string
+              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+      additionalPrinterColumns:
+        - name: StorageClassName
+          type: string
+          description: Name of the StorageClass
+          jsonPath: .storageClassName
+        - name: Capacity
+          type: string
+          description: Available capacity
+          jsonPath: .capacity
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp

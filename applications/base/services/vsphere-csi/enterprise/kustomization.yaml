@@ -4,6 +4,8 @@ kind: Kustomization
 resources:
   - "../namespace.yaml"
   - "../crds/csinodetopology-crd.yaml"
+  - "../crds/cnsvolumeoperationrequest-crd.yaml"
+  - "../crds/csistoragecapacity-crd.yaml"
   - "../helmrelease.yaml"
   - "../../global/enterprise/source.yaml"
 patches:

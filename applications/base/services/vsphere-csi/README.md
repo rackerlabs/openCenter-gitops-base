@@ -40,7 +40,11 @@ For detailed topology configuration, see the [vSphere CSI Topology Documentation
 
 ## CRDs Included
 
+This base configuration includes all required vSphere CSI CustomResourceDefinitions:
+
 - **csinodetopologies.cns.vmware.com**: Tracks node topology information for zone-aware provisioning
+- **cnsvolumeoperationrequests.cns.vmware.com**: Manages asynchronous volume operations (create, delete, attach, detach, extend)
+- **csistoragecapacities.storage.k8s.io**: Tracks available storage capacity for intelligent scheduling (Note: Built-in for Kubernetes 1.24+, included for compatibility with older versions)
 
 ## Dependencies
 
