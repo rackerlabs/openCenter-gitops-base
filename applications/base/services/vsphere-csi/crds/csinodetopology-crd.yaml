@@ -1,0 +1,82 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: csinodetopologies.cns.vmware.com
+spec:
+  group: cns.vmware.com
+  names:
+    kind: CSINodeTopology
+    listKind: CSINodeTopologyList
+    plural: csinodetopologies
+    singular: csinodetopology
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          description: CSINodeTopology is the Schema for the csinodetopologies API
+          type: object
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation
+                of an object. Servers should convert recognized schemas to the latest
+                internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this
+                object represents. Servers may infer this from the endpoint the client
+                submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: CSINodeTopologySpec defines the desired state of CSINodeTopology
+              type: object
+              properties:
+                nodeName:
+                  description: NodeName is the name of the Kubernetes node
+                  type: string
+                nodeUUID:
+                  description: NodeUUID is the UUID of the node VM in vSphere
+                  type: string
+            status:
+              description: CSINodeTopologyStatus defines the observed state of CSINodeTopology
+              type: object
+              properties:
+                errorMessage:
+                  description: ErrorMessage contains error details if topology discovery failed
+                  type: string
+                status:
+                  description: Status indicates the current state of topology discovery
+                  type: string
+                topologyLabels:
+                  description: TopologyLabels contains the discovered topology labels
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      key:
+                        type: string
+                      value:
+                        type: string
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: NodeName
+          type: string
+          description: Name of the Kubernetes node
+          jsonPath: .spec.nodeName
+        - name: NodeUUID
+          type: string
+          description: UUID of the node VM
+          jsonPath: .spec.nodeUUID
+        - name: Status
+          type: string
+          description: Status of topology discovery
+          jsonPath: .status.status
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
