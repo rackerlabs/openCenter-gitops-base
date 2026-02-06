@@ -3,8 +3,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - "../namespace.yaml"
-  - "../crds/csinodetopology-crd.yaml"
-  # - "../crds/cnsvolumeoperationrequest-crd.yaml"
+  # Need to revisit on how to add this without them being forced to a namespace
+  #- "../crds/csinodetopology-crd.yaml"
+  #- "../crds/cnsvolumeoperationrequest-crd.yaml"
   #- "../crds/csistoragecapacity-crd.yaml"
   - "../helmrelease.yaml"
   - "../../global/enterprise/source.yaml"
