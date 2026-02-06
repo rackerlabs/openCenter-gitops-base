@@ -5,7 +5,7 @@ resources:
   - "../namespace.yaml"
   - "../crds/csinodetopology-crd.yaml"
   - "../crds/cnsvolumeoperationrequest-crd.yaml"
-  - "../crds/csistoragecapacity-crd.yaml"
+  #- "../crds/csistoragecapacity-crd.yaml"
   - "source.yaml"
   - "../helmrelease.yaml"
 secretGenerator:
