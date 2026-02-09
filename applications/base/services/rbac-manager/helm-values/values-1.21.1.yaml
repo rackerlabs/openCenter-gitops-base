@@ -103,7 +103,7 @@ deploymentLabels:
 
 # Service Monitor for Prometheus - enabled with proper configuration
 serviceMonitor:
-  enabled: true
+  enabled: false
   additionalLabels:
     app.kubernetes.io/component: rbac-manager
     app.kubernetes.io/part-of: openCenter
