@@ -1,0 +1,5 @@
+defaultImageRegistry: ghcr.io/opencenter-cloud
+defaultImageRepository: strimzi
+image:
+  imagePullSecrets:
+    - name: ghcr-secret
