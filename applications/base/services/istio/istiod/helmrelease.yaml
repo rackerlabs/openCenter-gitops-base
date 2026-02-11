@@ -2,10 +2,10 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: istio
+  name: istiod
   namespace: istio-system
 spec:
-  releaseName: istio
+  releaseName: istiod
   interval: 5m
   timeout: 10m
   driftDetection:
@@ -36,13 +36,13 @@ spec:
         namespace: istio-system
   valuesFrom:
     - kind: Secret
-      name: istio-values-base
+      name: istiod-values-base
       valuesKey: values.yaml
     - kind: Secret
-      name: istio-values-enterprise
+      name: istiod-values-enterprise
       valuesKey: hardened-enterprise.yaml
       optional: true
     - kind: Secret
-      name: istio-values-override
+      name: istiod-values-override
       valuesKey: override.yaml
       optional: true
