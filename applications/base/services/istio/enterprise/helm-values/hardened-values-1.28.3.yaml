@@ -4,3 +4,4 @@ global:
   tag: 1.28.3
   imagePullSecrets:
     - ghcr-secret
+replicaCount: 2
