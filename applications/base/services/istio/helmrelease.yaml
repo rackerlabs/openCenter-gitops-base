@@ -10,6 +10,13 @@ spec:
   timeout: 10m
   driftDetection:
     mode: enabled
+    ignore:
+      - paths:
+          - /webhooks/0/clientConfig/caBundle
+          - /webhooks/0/failurePolicy
+        target:
+          kind: ValidatingWebhookConfiguration
+          name: istio-validator-istio-system
   install:
     remediation:
       retries: 3
