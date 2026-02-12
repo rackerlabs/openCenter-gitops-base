@@ -22,7 +22,7 @@ spec:
   chart:
     spec:
       chart: strimzi-kafka-operator
-      version: 0.49.1
+      version: 0.50.0
       sourceRef:
         kind: HelmRepository
         name: strimzi-kafka-operator
@@ -32,10 +32,10 @@ spec:
       name: kafka-api-values-base
       valuesKey: values.yaml
     - kind: Secret
-      name: kafka-api-values-override
-      valuesKey: override.yaml
-      optional: true
-    - kind: Secret
       name: kafka-api-values-enterprise
       valuesKey: hardened-enterprise.yaml
+      optional: true
+    - kind: Secret
+      name: kafka-api-values-override
+      valuesKey: override.yaml
       optional: true
