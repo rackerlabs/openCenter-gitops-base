@@ -3,7 +3,7 @@
 global:
   # If set, these take highest precedence and change both envoyGateway and ratelimit's container registry and pull secrets.
   # -- Global override for image registry
-  imageRegistry: ''
+  imageRegistry: ""
   # -- Global override for image pull secrets
   imagePullSecrets: []
 
@@ -36,9 +36,9 @@ deployment:
   envoyGateway:
     image:
       # if both this and global.imageRegistry are specified, this has to include both registry and repository explicitly, eg docker.io/envoyproxy/gateway
-      repository: ''
-      tag: ''
-    imagePullPolicy: ''
+      repository: ""
+      tag: ""
+    imagePullPolicy: ""
     imagePullSecrets: []
     resources:
       limits:
@@ -74,8 +74,8 @@ deployment:
   pod:
     affinity: {}
     annotations:
-      prometheus.io/scrape: 'true'
-      prometheus.io/port: '19001'
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "19001"
     labels: {}
     topologySpreadConstraints: []
     tolerations: []
@@ -83,7 +83,7 @@ deployment:
 
 service:
   # If set to PreferClose, the Envoy fleet will prioritize connecting to the Envoy Gateway pods that are topologically closest to them.
-  trafficDistribution: ''
+  trafficDistribution: ""
   annotations: {}
 
 hpa:
@@ -103,7 +103,8 @@ config:
     logging:
       level:
         default: info
-    extensionApis: {}
+    extensionApis:
+      enableBackend: true
 createNamespace: false
 
 kubernetesClusterDomain: cluster.local
