@@ -5,3 +5,7 @@ global:
   imagePullSecrets:
     - ghcr-secret
 autoscaleMin: 2
+pilot:
+  env:
+    PILOT_ENABLE_GATEWAY_API_STATUS: false
+    PILOT_ENABLE_GATEWAY_API: false
