@@ -451,23 +451,21 @@ From A-CODE-REVIEW.md findings:
 
 ---
 
-**Status:** B0-B2 complete, B3.1 (reference docs) partially complete
+**Status:** B0-B2 complete, B3.1 (reference docs) COMPLETE, ready for B3.2 (explanation docs)
 
 ## B3 Progress
 
-### B3.1: Reference Documentation (IN PROGRESS)
+### B3.1: Reference Documentation (COMPLETE ✅)
 
 **Completed:**
 - ✅ `docs/reference/directory-structure.md` - Complete repository structure reference
 - ✅ `docs/reference/service-catalog.md` - All 22+ platform services documented
 - ✅ `docs/reference/flux-resources.md` - Complete FluxCD resource specifications
 - ✅ `docs/reference/helm-values-schema.md` - Three-tier values pattern reference
+- ✅ `docs/reference/kustomize-patterns.md` - Kustomize patterns and components
+- ✅ `docs/reference/sops-configuration.md` - SOPS encryption configuration
 
-**Remaining:**
-- ⏳ `docs/reference/kustomize-patterns.md` - Kustomization patterns used
-- ⏳ `docs/reference/sops-configuration.md` - SOPS encryption rules
-
-### B3.2: Explanation Documentation (NOT STARTED)
+### B3.2: Explanation Documentation (IN PROGRESS)
 
 **Planned:**
 - ⏳ `docs/explanation/architecture.md`
