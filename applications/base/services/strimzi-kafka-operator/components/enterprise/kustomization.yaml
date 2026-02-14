@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+    - ../../../global/enterprise/source.yaml
+patches:
+    - target:
+        kind: HelmRepository
+        name: strimzi-kafka-operator
+      patch: |-
+        $patch: delete
+        apiVersion: source.toolkit.fluxcd.io/v1
+        kind: HelmRepository
+        metadata:
+          name: strimzi-kafka-operator
+    - target:
+        group: helm.toolkit.fluxcd.io
+        version: v2
+        kind: HelmRelease
+        name: strimzi-kafka-operator
+      patch: |-
+        - op: replace
+          path: /spec/chart/spec/sourceRef/name
+          value: opencenter-cloud
+secretGenerator:
+    - name: kafka-api-values-enterprise
+      namespace: kafka-system
+      type: Opaque
+      files:
+        - hardened-enterprise.yaml=./helm-values/hardened-values-0.50.0.yaml
+      options:
+        disableNameSuffixHash: true
