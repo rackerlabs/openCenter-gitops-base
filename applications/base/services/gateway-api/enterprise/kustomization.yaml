@@ -1,30 +1,16 @@
----
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - "../namespace.yaml"
-  - "../helmrelease.yaml"
-  - "../../global/enterprise/source.yaml"
-patches:
-  - path: patch-helmrelease-source.yaml
-    target:
-      group: helm.toolkit.fluxcd.io
-      version: v2
-      kind: HelmRelease
-      name: envoy-gateway-api
-      namespace: envoy-gateway-system
+    - ../namespace.yaml
+    - ../community/source.yaml
+    - ../helmrelease.yaml
+components:
+    - ../components/enterprise
 secretGenerator:
-  - name: envoy-gateway-api-values-base
-    namespace: envoy-gateway-system
-    type: Opaque
-    files:
-      - values.yaml=../helm-values/values-v0.0.0.yaml
-    options:
-      disableNameSuffixHash: true
-  - name: envoy-gateway-api-values-enterprise
-    namespace: envoy-gateway-system
-    type: Opaque
-    files:
-      - hardened-enterprise.yaml=./helm-values/hardened-values-v0.0.0.yaml
-    options:
-      disableNameSuffixHash: true
+    - name: envoy-gateway-api-values-base
+      namespace: envoy-gateway-system
+      type: Opaque
+      files:
+        - values.yaml=../helm-values/values-v0.0.0.yaml
+      options:
+        disableNameSuffixHash: true

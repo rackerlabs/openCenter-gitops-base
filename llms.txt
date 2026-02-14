@@ -1,0 +1,777 @@
+# openCenter GitOps Base
+
+> openCenter GitOps Base is a GitOps-managed Kubernetes platform that provides production-ready services and infrastructure using Flux CD. It delivers a complete stack including observability, storage, security, and networking components for Kubernetes clusters on OpenStack and vSphere.
+
+## Operator Guidance
+
+- All services follow GitOps principles with Flux CD managing deployments from Git
+- Services use HelmRelease and Kustomization resources with hardened security configurations
+- Secrets are encrypted using SOPS with age keys before committing to Git
+- Base manifests are overlaid with environment-specific configurations per cluster
+- Services include cert-manager, Harbor, Keycloak, Kyverno, Longhorn, MetalLB, Velero, and observability stack
+- Infrastructure provisioning uses OpenTofu with Kubespray for Kubernetes deployment
+- All services require specific labels (app.kubernetes.io/*, opencenter.io/*) and scheduling tolerations
+
+## Installation
+
+### Bootstrap Flux on New Cluster
+
+**Source:** docs/onboarding-service-overlay.md
+
+Install Flux and bootstrap GitOps management on a newly deployed Kubernetes cluster.
+
+```bash
+GIT_REPO="your-org/your-repo"
+CLUSTER_NAME="your-cluster"
+
+# Install Flux CLI
+curl -s https://fluxcd.io/install.sh | sudo FLUX_VERSION=2.7.0 bash
+
+# Bootstrap Flux with Git repository
+flux bootstrap git \
+  --url=ssh://git@github.com/${GIT_REPO}.git \
+  --branch=main \
+  --private-key-file=${HOME}/.ssh/${CLUSTER_NAME}_id_ed25519 \
+  --path=applications/overlays/${CLUSTER_NAME}
+
+# Verify Flux installation
+flux get all -A
+```
+
+### Create Deploy Key for Base Repository
+
+**Source:** docs/onboarding-service-overlay.md
+
+Generate SSH deploy key to allow Flux to access the openCenter base repository.
+
+```bash
+# Create deploy key secret
+flux create secret git opencenter-base \
+  --ssh-key-algorithm=ed25519 \
+  --url=ssh://git@github.com/rackerlabs/openCenter-gitops-base.git \
+  -n flux-system
+
+# Add the public key output to GitHub repository settings as read-only deploy key
+```
+
+### Deploy Infrastructure with OpenTofu
+
+**Source:** iac/README.md
+
+Initialize and deploy Kubernetes cluster infrastructure on OpenStack using OpenTofu.
+
+```bash
+# Navigate to cluster directory
+cd infrastructure/clusters/demo-cluster
+
+# Export OpenStack credentials
+export TF_VAR_application_credential_id='your-credential-id'
+export TF_VAR_application_credential_secret='your-secret'
+export AWS_ACCESS_KEY_ID='your-aws-key'
+export AWS_SECRET_ACCESS_KEY='your-aws-secret'
+
+# Initialize OpenTofu
+terraform init
+
+# Deploy cluster
+terraform apply
+
+# Access cluster
+export KUBECONFIG=${PWD}/kubeconfig.yaml
+kubectl get nodes
+```
+
+## Quickstart
+
+### Add New Service to Cluster
+
+**Source:** docs/adding-new-service.md
+
+Complete workflow to add a new service following openCenter standards.
+
+```bash
+# Create service directory structure
+mkdir -p applications/base/services/my-service/helm-values
+
+# Create namespace
+cat > applications/base/services/my-service/namespace.yaml <<EOF
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-service
+EOF
+
+# Create Helm repository source
+cat > applications/base/services/my-service/source.yaml <<EOF
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: my-service-repo
+spec:
+  url: https://charts.example.com
+  interval: 1h
+EOF
+
+# Validate kustomization builds
+cd applications/base/services/my-service
+kubectl kustomize . --dry-run=server
+```
+
+### Onboard Service with Overlay
+
+**Source:** docs/onboarding-service-overlay.md
+
+Add cert-manager service to a cluster using overlay configuration.
+
+```bash
+# Create Git source for cert-manager
+cat > applications/overlays/${CLUSTER_NAME}/services/sources/opencenter-cert-manager.yaml <<EOF
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: opencenter-cert-manager
+  namespace: flux-system
+spec:
+  interval: 15m
+  url: ssh://git@github.com/rackerlabs/openCenter-gitops-base.git
+  ref:
+    tag: v1.0.0
+  secretRef:
+    name: opencenter-base
+EOF
+
+# Create Flux Kustomization
+cat > applications/overlays/${CLUSTER_NAME}/services/fluxcd/cert-manager.yaml <<EOF
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cert-manager-base
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: sources
+      namespace: flux-system
+  interval: 5m
+  retryInterval: 1m
+  timeout: 10m
+  sourceRef:
+    kind: GitRepository
+    name: opencenter-cert-manager
+    namespace: flux-system
+  path: applications/base/services/cert-manager
+  targetNamespace: cert-manager
+  prune: true
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: cert-manager
+      namespace: cert-manager
+EOF
+```
+
+## Core Concepts
+
+### GitOps Architecture
+
+**Source:** docs/service-standards-and-lifecycle.md
+
+openCenter uses a mono-repo structure with Flux CD managing all deployments. Base manifests are stored in openCenter-gitops-base, while cluster-specific overlays live in separate repositories.
+
+```
+repo/
+├─ clusters/
+│  ├─ prod/
+│  └─ stage/
+├─ apps/
+│  ├─ service-A/
+│  │  ├─ helmrelease.yaml
+│  │  ├─ kustomization.yaml
+│  │  └─ values/
+│  └─ service-B/
+├─ infra/
+└─ policies/
+```
+
+### HelmRelease Pattern
+
+**Source:** docs/adding-new-service.md
+
+Standard HelmRelease configuration with drift detection, remediation, and values from secrets.
+
+```yaml
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+spec:
+  releaseName: cert-manager
+  interval: 5m
+  timeout: 10m
+  driftDetection:
+    mode: enabled
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    remediation:
+      retries: 0
+      remediateLastFailure: false
+  targetNamespace: cert-manager
+  chart:
+    spec:
+      chart: cert-manager
+      version: v1.18.2
+      sourceRef:
+        kind: HelmRepository
+        name: jetstack
+        namespace: cert-manager
+  valuesFrom:
+    - kind: Secret
+      name: cert-manager-values-base
+      valuesKey: hardened.yaml
+    - kind: Secret
+      name: cert-manager-values-override
+      valuesKey: override.yaml
+      optional: true
+```
+
+### Kustomization with Secret Generator
+
+**Source:** docs/adding-new-service.md
+
+Generate Kubernetes secrets from Helm values files using Kustomize secretGenerator.
+
+```yaml
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - "./namespace.yaml"
+  - "./source.yaml"
+  - "./helmrelease.yaml"
+
+secretGenerator:
+  - name: cert-manager-values-base
+    type: Opaque
+    files: [hardened.yaml=helm-values/hardened-values-v1.18.2.yaml]
+    options:
+      disableNameSuffixHash: true
+```
+
+### Service Directory Structure
+
+**Source:** docs/adding-new-service.md
+
+Every service follows a standardized directory layout for consistency and maintainability.
+
+```
+applications/base/services/my-service/
+├── kustomization.yaml
+├── namespace.yaml
+├── source.yaml
+├── helmrelease.yaml
+└── helm-values/
+    └── hardened-values-vX.Y.Z.yaml
+```
+
+## Common Recipes
+
+### Encrypt Secrets with SOPS
+
+**Source:** docs/onboarding-service-overlay.md
+
+Use SOPS with age encryption to secure sensitive data before committing to Git.
+
+```bash
+# Generate age key pair
+mkdir -p ${HOME}/config/sops/age/
+age-keygen -o ${HOME}/config/sops/age/${CLUSTER_NAME}_keys.txt
+
+# Extract public key
+cat ${HOME}/config/sops/age/${CLUSTER_NAME}_keys.txt | grep 'public key'
+
+# Create .sops.yaml configuration
+cat > applications/overlays/${CLUSTER_NAME}/.sops.yaml <<EOF
+creation_rules:
+  - path_regex: '^managed-services/.*/.*\.ya?ml'
+    age: age1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    encrypted_regex: "^(data|stringData)$"
+EOF
+
+# Encrypt secret file
+sops -e -i secret.yaml
+
+# Decrypt when needed
+export SOPS_AGE_KEY_FILE=${HOME}/config/sops/age/${CLUSTER_NAME}_keys.txt
+sops -d secret.yaml
+
+# Create Kubernetes secret with age key
+kubectl create secret generic sops-age \
+  --from-file=age.agekey=${HOME}/config/sops/age/${CLUSTER_NAME}_keys.txt \
+  -n flux-system
+```
+
+### Configure SOPS Decryption in Flux
+
+**Source:** docs/onboarding-service-overlay.md
+
+Enable Flux to decrypt SOPS-encrypted files during reconciliation.
+
+```yaml
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cert-manager-override
+  namespace: flux-system
+spec:
+  interval: 5m
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  path: ./applications/overlays/prod/services/cert-manager
+  targetNamespace: cert-manager
+  prune: true
+```
+
+### Create Certificate Issuer
+
+**Source:** docs/cert-manager-config-guide.md
+
+Configure Let's Encrypt certificate issuer with HTTP01 challenge for automatic TLS certificates.
+
+```yaml
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@example.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+```
+
+### Request Certificate with Ingress
+
+**Source:** docs/cert-manager-config-guide.md
+
+Automatically provision TLS certificate using ingress annotations.
+
+```yaml
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - hosts:
+    - example.com
+    secretName: example-tls
+  rules:
+  - host: example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: example-service
+            port:
+              number: 80
+```
+
+### Create Kyverno Validation Policy
+
+**Source:** docs/kyverno-config-guide.md
+
+Enforce required labels on all pods using Kyverno cluster policy.
+
+```yaml
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-labels
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-labels
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    validate:
+      message: "Required labels are missing"
+      pattern:
+        metadata:
+          labels:
+            app.kubernetes.io/name: "?*"
+            app.kubernetes.io/version: "?*"
+```
+
+### Create Kyverno Mutation Policy
+
+**Source:** docs/kyverno-config-guide.md
+
+Automatically add security context to pods using mutation policy.
+
+```yaml
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-security-context
+spec:
+  rules:
+  - name: add-security-context
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    mutate:
+      patchStrategicMerge:
+        spec:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+```
+
+## Configuration
+
+### OpenTofu Backend Configuration
+
+**Source:** iac/README.md
+
+Configure S3 backend for OpenTofu state management with encryption and locking.
+
+```hcl
+terraform {
+  backend "s3" {
+    bucket       = "BUCKET_NAME"
+    key          = "CLUSTER_NAME/tfstate/terraform.tfstate"
+    region       = "us-west-2"
+    use_lockfile = true
+    encrypt      = true
+  }
+}
+```
+
+### Cluster Configuration Variables
+
+**Source:** iac/README.md
+
+Essential OpenTofu variables for cluster deployment on OpenStack.
+
+```hcl
+locals {
+  cluster_name                            = "demo-cluster"
+  openstack_tenant_name                   = "my-tenant"
+  subnet_nodes                            = "10.2.188.0/22"
+  kubespray_version                       = "v2.28.1"
+  kubernetes_version                      = "1.32.5"
+}
+```
+
+### Hardened Helm Values
+
+**Source:** docs/adding-new-service.md
+
+Security-hardened configuration template for Helm charts following best practices.
+
+```yaml
+# Security configurations
+replicaCount: 2
+securityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+# Production configurations
+prometheus:
+  enabled: true
+nodeSelector:
+  kubernetes.io/os: linux
+```
+
+### Node Scheduling Configuration
+
+**Source:** docs/service-standards-and-lifecycle.md
+
+Configure tolerations and node selectors for platform services.
+
+```yaml
+spec:
+  tolerations:
+    - key: workload
+      operator: Equal
+      value: system
+      effect: NoSchedule
+  nodeSelector:
+    workload: system
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: class
+                operator: In
+                values: ["storage"]
+```
+
+## API Patterns
+
+### Flux Kustomization with Dependencies
+
+**Source:** docs/service-standards-and-lifecycle.md
+
+Chain Kustomizations with dependsOn to prevent race conditions during deployment.
+
+```yaml
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cert-manager
+  namespace: flux-system
+spec:
+  interval: 5m
+  path: ./infrastructure/cert-manager/controller
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: platform-config
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: cert-manager
+      namespace: cert-manager
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cert-manager-certs
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: cert-manager
+  interval: 5m
+  path: ./infrastructure/cert-manager/certs
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: platform-config
+```
+
+### Required Service Labels
+
+**Source:** docs/service-standards-and-lifecycle.md
+
+All services must include Kubernetes-recommended and openCenter-specific labels.
+
+```yaml
+metadata:
+  labels:
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/instance: loki-prod
+    app.kubernetes.io/version: "3.1.0"
+    app.kubernetes.io/component: indexing
+    app.kubernetes.io/part-of: observability
+    app.kubernetes.io/managed-by: fluxcd
+    opencenter.io/owner: sre@opencenter.io
+    opencenter.io/tier: platform
+    opencenter.io/data-sensitivity: internal
+    opencenter.io/rto: 4h
+    opencenter.io/rpo: 1h
+    opencenter.io/sla: "99.9"
+    opencenter.io/backup-profile: daily
+```
+
+## Troubleshooting
+
+### Debug Flux Reconciliation Issues
+
+**Source:** docs/adding-new-service.md
+
+Check Flux controller logs and resource status when deployments fail.
+
+```bash
+# View all Flux resources
+kubectl get kustomization,gitrepositories,helmrepositories,helmreleases -A
+
+# Check controller logs
+kubectl logs -n flux-system deploy/source-controller
+kubectl logs -n flux-system deploy/kustomize-controller
+kubectl logs -n flux-system deploy/helm-controller
+
+# Force reconciliation
+flux reconcile kustomization my-service -n flux-system --with-source
+flux reconcile helmrelease my-service -n my-service --with-source
+
+# Check HelmRelease status
+kubectl describe helmrelease my-service -n my-service
+```
+
+### Troubleshoot Certificate Issues
+
+**Source:** docs/cert-manager-config-guide.md
+
+Diagnose certificate provisioning failures and ACME challenge issues.
+
+```bash
+# Check certificate status
+kubectl get certificates -A
+kubectl describe certificate <cert-name> -n <namespace>
+
+# Check certificate request details
+kubectl get certificaterequest -n <namespace>
+kubectl describe certificaterequest <request-name> -n <namespace>
+
+# Check ACME order status
+kubectl get order -n <namespace>
+kubectl describe order <order-name> -n <namespace>
+
+# View cert-manager logs
+kubectl logs -n cert-manager deployment/cert-manager
+
+# Check for rate limiting
+kubectl logs -n cert-manager deployment/cert-manager | grep "rate limit"
+```
+
+### Debug Kyverno Policy Violations
+
+**Source:** docs/kyverno-config-guide.md
+
+Investigate policy enforcement failures and webhook issues.
+
+```bash
+# Check policy reports
+kubectl get policyreport -A
+kubectl describe policyreport <report-name> -n <namespace>
+
+# Review cluster policies
+kubectl get clusterpolicy
+kubectl describe clusterpolicy <policy-name>
+
+# Check admission controller logs
+kubectl logs -n kyverno -l app.kubernetes.io/component=admission-controller
+
+# Verify webhook configuration
+kubectl get validatingadmissionpolicy
+kubectl get endpoints -n kyverno
+```
+
+### Verify Service Deployment
+
+**Source:** docs/adding-new-service.md
+
+Standard verification commands for service health and configuration.
+
+```bash
+# Check application status
+kubectl get pods -n my-service
+kubectl get helmreleases -n my-service
+
+# View generated secrets
+kubectl get secret my-service-values-base -n my-service -o yaml
+
+# Test kustomization rendering
+cd applications/base/services/my-service
+kubectl kustomize .
+
+# Dry-run validation
+kubectl apply --dry-run=server -f helmrelease.yaml
+```
+
+## Security Notes
+
+### Secret Management
+
+All secrets must be encrypted with SOPS before committing to Git. Never commit plaintext secrets. Use age encryption with keys stored securely in Kubernetes secrets for Flux decryption.
+
+### Pod Security Standards
+
+Services must implement security contexts with runAsNonRoot, drop all capabilities, use read-only root filesystem, and disable privilege escalation. Kyverno policies enforce these standards.
+
+### Image Security
+
+Pin exact image versions using digests or immutable tags. Enable image signature verification with Cosign for platform-tier services. Scan images for CVEs before deployment.
+
+### Network Policies
+
+Implement default-deny network policies with least-privilege rules. Use Kyverno generation policies to automatically create network policies for new namespaces.
+
+## Examples
+
+### Complete Service Implementation
+
+**Source:** README.md
+
+The cert-manager service demonstrates the complete pattern with all required components.
+
+```
+applications/base/services/cert-manager/
+├── kustomization.yaml
+├── namespace.yaml
+├── source.yaml
+├── helmrelease.yaml
+└── helm-values/
+    └── hardened-values-v1.18.2.yaml
+```
+
+### Available Core Services
+
+**Source:** README.md
+
+Production-ready services included in openCenter GitOps Base:
+
+- cert-manager: TLS certificate management
+- harbor: Container registry with security scanning
+- keycloak: Identity and access management
+- kyverno: Kubernetes-native policy engine
+- longhorn: Distributed block storage
+- metallb: Load balancer for bare-metal
+- velero: Backup and disaster recovery
+- vsphere-csi: vSphere storage integration
+- openstack-csi: OpenStack Cinder CSI driver
+
+### Observability Stack
+
+**Source:** README.md
+
+Complete monitoring, logging, and tracing solution:
+
+- kube-prometheus-stack: Prometheus, Grafana, Alertmanager
+- loki: Log aggregation and storage
+- tempo: Distributed tracing backend
+- opentelemetry-kube-stack: Unified telemetry collection

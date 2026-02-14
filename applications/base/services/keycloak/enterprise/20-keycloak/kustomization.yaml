@@ -1,12 +1,7 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - "../../20-keycloak/"
-patches:
-  - target:
-      group: k8s.keycloak.org
-      version: v2alpha1
-      kind: Keycloak
-      name: keycloak
-      namespace: keycloak
-    path: patch-keycloak-image.yaml
+components:
+  - "../../20-keycloak/components/enterprise"

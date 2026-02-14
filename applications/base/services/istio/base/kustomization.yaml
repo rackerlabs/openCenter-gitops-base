@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+    - ../namespace/namespace.yaml
+    - ../sources/istio.yaml
+    - helmrelease.yaml
+secretGenerator:
+    - name: istio-base-values-base
+      namespace: istio-system
+      type: Opaque
+      files:
+        - values.yaml=helm-values/values-1.28.3.yaml
+      options:
+        disableNameSuffixHash: true

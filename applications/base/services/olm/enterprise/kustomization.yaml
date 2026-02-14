@@ -4,18 +4,5 @@ kind: Kustomization
 resources:
   - "https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.34.0/crds.yaml"
   - "https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.34.0/olm.yaml"
-patches:
-  - target:
-      group: apps
-      version: v1
-      kind: Deployment
-      name: catalog-operator
-      namespace: olm
-    path: patch-catalog-operator-images.yaml
-  - target:
-      group: operators.coreos.com
-      version: v1alpha1
-      kind: CatalogSource
-      name: operatorhubio-catalog
-      namespace: olm
-    path: patch-operatorhubio-catalog-image.yaml
+components:
+  - ../components/enterprise

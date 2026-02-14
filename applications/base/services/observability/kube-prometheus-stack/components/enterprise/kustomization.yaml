@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+    - ../../../global/enterprise/source.yaml
+patches:
+    - target:
+        kind: HelmRepository
+        name: kube-prometheus-stack
+      patch: |-
+        $patch: delete
+        apiVersion: source.toolkit.fluxcd.io/v1
+        kind: HelmRepository
+        metadata:
+          name: kube-prometheus-stack
+    - target:
+        group: helm.toolkit.fluxcd.io
+        version: v2
+        kind: HelmRelease
+        name: kube-prometheus-stack
+      patch: |-
+        - op: replace
+          path: /spec/chart/spec/sourceRef/name
+          value: opencenter-cloud
+secretGenerator:
+    - name: kube-prometheus-stack-values-enterprise
+      namespace: observability
+      type: Opaque
+      files:
+        - hardened-enterprise.yaml=./helm-values/hardened-values-77.6.0.yaml
+        - hardened-alertmanager-overrides.yaml=./helm-values/alertmanager-overrides.yaml
+        - hardened-prometheus-overrides.yaml=./helm-values/prometheus-overrides.yaml
+      options:
+        disableNameSuffixHash: true

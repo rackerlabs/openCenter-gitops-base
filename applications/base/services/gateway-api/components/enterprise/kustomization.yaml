@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+    - ../../../global/enterprise/source.yaml
+patches:
+    - target:
+        kind: HelmRepository
+        name: envoyproxy
+      patch: |-
+        $patch: delete
+        apiVersion: source.toolkit.fluxcd.io/v1
+        kind: HelmRepository
+        metadata:
+          name: envoyproxy
+    - target:
+        group: helm.toolkit.fluxcd.io
+        version: v2
+        kind: HelmRelease
+        name: envoy-gateway-api
+      patch: |-
+        - op: replace
+          path: /spec/chart/spec/sourceRef/name
+          value: opencenter-cloud
+secretGenerator:
+    - name: envoy-gateway-api-values-enterprise
+      namespace: envoy-gateway-system
+      type: Opaque
+      files:
+        - hardened-enterprise.yaml=../../enterprise/helm-values/hardened-values-v0.0.0.yaml
+      options:
+        disableNameSuffixHash: true

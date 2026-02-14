@@ -1,0 +1,9 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: operatorhubio-catalog
+  namespace: olm
+spec:
+  image: ghcr.io/opencenter-cloud/quay.io/operatorhubio/catalog@sha256:a68eab96260d796e06e020175676d5672c049b0f5d1e9fdb940a6b1e54b9b701
+  secrets:
+    - ghcr-secret

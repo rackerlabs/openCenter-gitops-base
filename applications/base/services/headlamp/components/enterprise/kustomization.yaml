@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+    - ../../../global/enterprise/source.yaml
+patches:
+    - target:
+        kind: HelmRepository
+        name: headlamp
+      patch: |-
+        $patch: delete
+        apiVersion: source.toolkit.fluxcd.io/v1
+        kind: HelmRepository
+        metadata:
+          name: headlamp
+    - target:
+        group: helm.toolkit.fluxcd.io
+        version: v2
+        kind: HelmRelease
+        name: headlamp
+      patch: |-
+        - op: replace
+          path: /spec/chart/spec/sourceRef/name
+          value: opencenter-cloud
+secretGenerator:
+    - name: headlamp-values-enterprise
+      namespace: headlamp
+      type: Opaque
+      files:
+        - hardened-enterprise.yaml=../../enterprise/helm-values/hardened-values-0.35.0.yaml
+      options:
+        disableNameSuffixHash: true
