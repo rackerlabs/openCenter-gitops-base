@@ -467,8 +467,10 @@ From A-CODE-REVIEW.md findings:
 
 ### B3.2: Explanation Documentation (IN PROGRESS)
 
-**Planned:**
-- ⏳ `docs/explanation/architecture.md`
+**Completed:**
+- ✅ `docs/explanation/architecture.md` - System design and architectural decisions
+
+**Remaining:**
 - ⏳ `docs/explanation/gitops-workflow.md`
 - ⏳ `docs/explanation/three-tier-values.md`
 - ⏳ `docs/explanation/enterprise-components.md`
