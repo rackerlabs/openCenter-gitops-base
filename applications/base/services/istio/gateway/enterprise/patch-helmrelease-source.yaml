@@ -1,0 +1,10 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: gateway
+  namespace: istio-system
+spec:
+  chart:
+    spec:
+      sourceRef:
+        name: opencenter-cloud

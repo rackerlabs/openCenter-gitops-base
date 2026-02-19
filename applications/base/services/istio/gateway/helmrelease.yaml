@@ -1,0 +1,48 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-gateway
+  namespace: istio-system
+spec:
+  releaseName: istio-gateway
+  interval: 5m
+  timeout: 10m
+  driftDetection:
+    mode: enabled
+    ignore:
+      - paths:
+          - /webhooks/0/clientConfig/caBundle
+          - /webhooks/0/failurePolicy
+        target:
+          kind: ValidatingWebhookConfiguration
+          name: istio-validator-istio-system
+  install:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    remediation:
+      retries: 0
+      remediateLastFailure: false
+  targetNamespace: istio-system
+  chart:
+    spec:
+      chart: gateway
+      version: 1.28.3
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: istio-system
+  valuesFrom:
+    - kind: Secret
+      name: istio-gateway-values-base
+      valuesKey: values.yaml
+    - kind: Secret
+      name: istio-gateway-values-enterprise
+      valuesKey: hardened-enterprise.yaml
+      optional: true
+    - kind: Secret
+      name: istio-gateway-values-override
+      valuesKey: override.yaml
+      optional: true
