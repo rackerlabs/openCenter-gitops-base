@@ -1,6 +1,6 @@
 # Adding a New Service to openCenter GitOps Base
 
-This guide explains how to add a new service to the openCenter GitOps base repository using the standardized Flux CD patterns. We'll use **cert-manager** as a reference example to illustrate the complete process.
+This guide explains how to add a new service to the openCenter GitOps base repository using the standardized Flux CD patterns following ADR-001 Kustomize Components pattern. We'll use **cert-manager** as a reference example to illustrate the complete process.
 
 ## Overview
 
@@ -11,29 +11,69 @@ All services in openCenter GitOps follow a consistent structure using Flux CD's 
 - **Kustomization**: Orchestrates resources and generates secrets
 - **Namespace**: Isolates the service resources
 - **Hardened Values**: Security-focused Helm configurations
+- **Components**: Optional enterprise features using Kustomize Components
 
 ## Service Directory Structure
 
-Each service follows this standardized directory layout:
+### Standard Helm Service (Community Only)
 
 ```
 applications/base/services/my-service/
-├── kustomization.yaml          # Main orchestration file
-├── namespace.yaml              # Service namespace
-├── source.yaml                 # HelmRepository definition
-├── helmrelease.yaml           # HelmRelease configuration
+├── kustomization.yaml              # Base kustomization (community)
+├── namespace.yaml                  # Service namespace
+├── source.yaml                     # HelmRepository (community source)
+├── helmrelease.yaml               # HelmRelease configuration
 └── helm-values/
-    └── hardened-values-vX.Y.Z.yaml  # Security-hardened Helm values
+    └── values-vX.Y.Z.yaml         # Base Helm values
+```
+
+### Standard Helm Service (with Enterprise Variant)
+
+```
+applications/base/services/my-service/
+├── kustomization.yaml              # Base kustomization (community)
+├── namespace.yaml                  # Service namespace
+├── source.yaml                     # HelmRepository (community source)
+├── helmrelease.yaml               # HelmRelease configuration
+├── helm-values/
+│   └── values-vX.Y.Z.yaml         # Base Helm values
+├── enterprise/
+│   └── helm-values/
+│       └── hardened-values-vX.Y.Z.yaml  # Enterprise hardened values
+└── components/
+    └── enterprise/
+        ├── kustomization.yaml      # Enterprise component
+        └── helm-values/            # Symlink or reference to ../enterprise/helm-values
 ```
 
 ## Step-by-Step Implementation Guide
 
-### Step 1: Create the Service Directory Structure
+### Step 1: Determine Service Type
 
-Create the directory structure for your new service:
+Before creating files, determine:
 
+1. **Community-only or Enterprise variant?**
+   - Community-only: No enterprise-specific features
+   - Enterprise variant: Has hardened/enterprise-specific configuration
+
+2. **Helm-based or raw manifests?**
+   - Helm: Uses HelmRepository and HelmRelease
+   - Raw: Uses direct Kubernetes manifests
+
+This guide covers Helm-based services. For raw manifests, see [Service Structure Reference](./service-structure.md).
+
+### Step 2: Create the Service Directory Structure
+
+**For community-only service:**
 ```bash
 mkdir -p applications/base/services/my-service/helm-values
+```
+
+**For service with enterprise variant:**
+```bash
+mkdir -p applications/base/services/my-service/helm-values
+mkdir -p applications/base/services/my-service/enterprise/helm-values
+mkdir -p applications/base/services/my-service/components/enterprise/helm-values
 ```
 
 ### Step 2: Create the Namespace Resource
@@ -184,9 +224,9 @@ spec:
 
 ### Step 5: Create Hardened Helm Values
 
-Create `applications/base/services/my-service/helm-values/hardened-values-vX.Y.Z.yaml`:
+Create `applications/base/services/my-service/helm-values/values-vX.Y.Z.yaml`:
 
-This file contains security-hardened configuration for the Helm chart. Use the chart version in the filename for versioning.
+This file contains base configuration for the Helm chart. Use the chart version in the filename for versioning.
 
 **Example structure for cert-manager:**
 
@@ -228,10 +268,99 @@ crds:
 - Enable monitoring (`prometheus.enabled: true`)
 - Use Linux node selectors for mixed OS clusters
 
-### Step 6: Create the Kustomization File
+### Step 6: Create Enterprise Hardened Values (Optional)
+
+**Only if your service has enterprise-specific features.**
+
+Create `applications/base/services/my-service/enterprise/helm-values/hardened-values-vX.Y.Z.yaml`:
+
+```yaml
+# Enterprise-specific hardened configuration
+# This typically includes:
+# - Stricter security settings
+# - Enterprise-only features
+# - Compliance-related configurations
+# - Additional monitoring/logging
+
+# Example:
+replicaCount: 3  # Higher availability for enterprise
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Enterprise-specific features
+enterpriseFeature:
+  enabled: true
+  
+# Additional security
+podSecurityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+  runAsGroup: 1000
+```
+
+### Step 7: Create Enterprise Component (Optional)
+
+**Only if your service has enterprise-specific features.**
+
+Create `applications/base/services/my-service/components/enterprise/kustomization.yaml`:
+
+```yaml
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - ../../../global/enterprise/source.yaml
+patches:
+  # Delete community HelmRepository
+  - target:
+      kind: HelmRepository
+      name: my-service-repo  # Match name from source.yaml
+    patch: |-
+      $patch: delete
+      apiVersion: source.toolkit.fluxcd.io/v1
+      kind: HelmRepository
+      metadata:
+        name: my-service-repo
+  
+  # Patch HelmRelease to use enterprise source
+  - target:
+      group: helm.toolkit.fluxcd.io
+      version: v2
+      kind: HelmRelease
+      name: my-service  # Match name from helmrelease.yaml
+    patch: |-
+      - op: replace
+        path: /spec/chart/spec/sourceRef/name
+        value: opencenter-cloud
+
+secretGenerator:
+  - name: my-service-values-enterprise
+    namespace: my-service
+    type: Opaque
+    files:
+      - hardened-enterprise.yaml=../../enterprise/helm-values/hardened-values-vX.Y.Z.yaml
+    options:
+      disableNameSuffixHash: true
+```
+
+**Key Points:**
+
+- `kind: Component` - Must be Component, not Kustomization
+- References global enterprise source
+- Deletes community HelmRepository
+- Patches HelmRelease to use enterprise source
+- Adds enterprise values secretGenerator
+
+### Step 8: Create the Kustomization File
 
 Create `applications/base/services/my-service/kustomization.yaml`:
 
+**For community-only service:**
 ```yaml
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -243,8 +372,28 @@ resources:
 
 secretGenerator:
   - name: my-service-values-base
+    namespace: my-service
     type: Opaque
-    files: [hardened.yaml=helm-values/hardened-values-vX.Y.Z.yaml]
+    files: [values.yaml=helm-values/values-vX.Y.Z.yaml]
+    options:
+      disableNameSuffixHash: true
+```
+
+**For service with enterprise variant:**
+```yaml
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources: 
+  - "./namespace.yaml"
+  - "./source.yaml"
+  - "./helmrelease.yaml"
+
+secretGenerator:
+  - name: my-service-values-base
+    namespace: my-service
+    type: Opaque
+    files: [values.yaml=helm-values/values-vX.Y.Z.yaml]
     options:
       disableNameSuffixHash: true
 ```
@@ -262,8 +411,9 @@ resources:
 
 secretGenerator:
   - name: cert-manager-values-base
+    namespace: cert-manager
     type: Opaque
-    files: [hardened.yaml=helm-values/hardened-values-v1.18.2.yaml]
+    files: [values.yaml=helm-values/values-v1.18.2.yaml]
     options:
       disableNameSuffixHash: true
 ```
@@ -271,18 +421,21 @@ secretGenerator:
 **Key Configuration:**
 
 - `resources`: List all YAML files to include
-- `secretGenerator`: Creates Kubernetes secrets from hardened values
+- `secretGenerator`: Creates Kubernetes secrets from values files
 - `disableNameSuffixHash: true`: Required for consistent secret naming
+- **Note:** Enterprise component is NOT referenced here - it's applied separately by customer overlays
 
 ## Validation and Testing
 
-### Step 1: Validate HelmRelease
+### Step 1: Validate Structure
 
-Check if the HelmRelease configuration is valid:
+Check if the service structure follows ADR-001 pattern:
 
 ```bash
 cd applications/base/services/my-service
-kubectl apply --dry-run=server -f helmrelease.yaml
+
+# Run validation script
+../../../../tools/validate-components.sh .
 ```
 
 ### Step 2: Validate Kustomization
@@ -290,8 +443,22 @@ kubectl apply --dry-run=server -f helmrelease.yaml
 Test the kustomization builds correctly:
 
 ```bash
-cd applications/base/services/my-service
-kubectl kustomize . --dry-run=server
+# Validate community deployment
+kubectl kustomize .
+
+# Validate enterprise deployment (if applicable)
+kustomize build . \
+  --enable-alpha-plugins \
+  --load-restrictor=LoadRestrictionsNone \
+  --components=components/enterprise
+```
+
+### Step 3: Validate HelmRelease
+
+Check if the HelmRelease configuration is valid:
+
+```bash
+kubectl apply --dry-run=client -f helmrelease.yaml
 ```
 
 ### Step 3: Deploying service to Kubernetes Cluster
@@ -544,3 +711,45 @@ After successfully adding your service:
 5. **Set Up Alerts**: Configure alerting rules for service health
 
 This standardized approach ensures consistency, security, and maintainability across all services in the openCenter GitOps platform.
+
+
+## ADR-001 Component Pattern
+
+### Enterprise Component Usage
+
+After ADR-001 migration, enterprise features are enabled using Kustomize Components:
+
+**In customer overlay FluxCD Kustomization:**
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: my-service
+  namespace: flux-system
+spec:
+  sourceRef:
+    kind: GitRepository
+    name: opencenter-gitops-base
+  path: applications/base/services/my-service
+  components:
+    - components/enterprise  # Enable enterprise features
+```
+
+### Component Structure Requirements
+
+If your service has enterprise features, the component must:
+
+1. **Use kind: Component** - Not Kustomization
+2. **Reference global enterprise source** - `../../../global/enterprise/source.yaml`
+3. **Delete community HelmRepository** - Using `$patch: delete`
+4. **Patch HelmRelease** - To use enterprise source (`opencenter-cloud`)
+5. **Add enterprise values** - Via secretGenerator
+
+See [Service Structure Reference](./service-structure.md) for complete component examples.
+
+## References
+
+- [Service Structure Reference](./service-structure.md) - Complete structure patterns
+- [Version Upgrade Guide](./version-upgrade-guide.md) - How to upgrade service versions
+- [Customer Overlay Migration Guide](./customer-overlay-migration-guide.md) - For customer deployments
+- [ADR-001: Kustomize Components Pattern](../ADRS/ADR-001-kustomize-components-for-enterprise-pattern.md) - Architecture decision

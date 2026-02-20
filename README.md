@@ -2,6 +2,19 @@
 
 This directory contains GitOps application manifests that are deployed as part of the openCenter cluster provisioning workflow. All applications are managed using Flux CD and follow GitOps principles for declarative, version-controlled deployments.
 
+## Recent Changes
+
+**ADR-001 Migration Complete (2026-02-20):** All services have been migrated to Kustomize Components pattern. The old `community/` and `enterprise/` directory structure has been replaced with a cleaner component-based approach.
+
+- **Breaking Change:** Customer overlays must be updated. See [Customer Overlay Migration Guide](docs/customer-overlay-migration-guide.md)
+- **New Structure:** Services now use `components/enterprise/` for enterprise features
+- **Benefits:** 60% file reduction, simplified version upgrades, zero duplication
+
+For details, see:
+- [ADR-001: Kustomize Components Pattern](../ADRS/ADR-001-kustomize-components-for-enterprise-pattern.md)
+- [Service Structure Reference](docs/service-structure.md)
+- [Customer Overlay Migration Guide](docs/customer-overlay-migration-guide.md)
+
 ## Directory Structure
 
 ```

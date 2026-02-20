@@ -5,7 +5,7 @@ resources:
     #- crds/csinodetopology-crd.yaml
     #- crds/cnsvolumeoperationrequest-crd.yaml
     #- crds/csistoragecapacity-crd.yaml
-    - community/source.yaml
+    - source.yaml
     - helmrelease.yaml
 secretGenerator:
     - name: vsphere-csi-values-base
