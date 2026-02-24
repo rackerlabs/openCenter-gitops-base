@@ -2,6 +2,11 @@
 
 This directory contains the **base manifests** for deploying [Cert-manager](https://cert-manager.io/). It is intended to be consumed by **cluster repositories** as a remote base, with the option to provide cluster-specific overrides.
 
+## Public Repository Scope
+
+- This public repository contains the **community/base** cert-manager deployment only.
+- Enterprise-specific values, chart source changes, and paid-only resources must be delivered from a **private enterprise repository** as an overlay/component on top of this base.
+
 ## Cert-Manager
 
 - Automates the management and renewal of TLS certificates in Kubernetes clusters.
