@@ -5,7 +5,7 @@ metadata:
   name: istio-gateway
   namespace: istio-system
 spec:
-  releaseName: istio-gateway
+  releaseName: istio-ingressgateway
   interval: 5m
   timeout: 10m
   driftDetection:
