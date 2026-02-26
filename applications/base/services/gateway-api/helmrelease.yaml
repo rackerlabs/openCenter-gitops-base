@@ -32,10 +32,6 @@ spec:
       name: envoy-gateway-api-values-base
       valuesKey: values.yaml
     - kind: Secret
-      name: envoy-gateway-api-values-enterprise
-      valuesKey: hardened-enterprise.yaml
-      optional: true
-    - kind: Secret
       name: envoy-gateway-api-values-override
       valuesKey: override.yaml
       optional: true
