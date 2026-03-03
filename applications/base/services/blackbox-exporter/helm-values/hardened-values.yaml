@@ -1,0 +1,198 @@
+---
+# Hardened configuration for Prometheus Blackbox Exporter
+# Following Zero Trust security principles for regulated environments
+
+# Number of replicas for high availability
+replicaCount: 2
+
+# Update strategy
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 1
+
+# Pod disruption budget for high availability
+podDisruptionBudget:
+  maxUnavailable: 1
+
+# Image configuration
+image:
+  registry: quay.io
+  repository: prometheus/blackbox-exporter
+  # Overrides the image tag whose default is {{ printf "v%s" .Chart.AppVersion }}
+  tag: ""
+  pullPolicy: IfNotPresent
+  # tag: v0.25.0  # Uncomment to pin specific version
+
+# Service account
+serviceAccount:
+  create: true
+  automountServiceAccountToken: true
+
+# To-DO test the hardened values
+# Pod security context
+# podSecurityContext:
+#   runAsNonRoot: true
+#   runAsUser: 1000
+#   fsGroup: 1000
+#   seccompProfile:
+#     type: RuntimeDefault
+
+# # Container security context
+# securityContext:
+#   allowPrivilegeEscalation: false
+#   readOnlyRootFilesystem: true
+#   runAsNonRoot: true
+#   runAsUser: 1000
+#   capabilities:
+#     drop:
+#       - ALL
+
+# Resources
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+# Node selector - ensure pods run on Linux nodes
+nodeSelector:
+  kubernetes.io/os: linux
+
+# Tolerations
+tolerations: []
+
+# Affinity for pod distribution
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - prometheus-blackbox-exporter
+          topologyKey: kubernetes.io/hostname
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 9115
+  annotations: {}
+
+# Prometheus ServiceMonitor
+serviceMonitor:
+  enabled: true
+  defaults:
+    labels: {}
+    interval: 60s
+    scrapeTimeout: 30s
+  targets: []
+  # Example targets:
+  # - name: example
+  #   url: https://example.com
+  #   module: http_2xx
+
+# Prometheus configuration
+prometheusRule:
+  enabled: false
+  additionalLabels: {}
+  rules: []
+
+# Blackbox exporter configuration
+config:
+  modules:
+    http_2xx:
+      prober: http
+      timeout: 5s
+      http:
+        valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+        valid_status_codes: []
+        method: GET
+        preferred_ip_protocol: "ip4"
+        follow_redirects: true
+        fail_if_ssl: false
+        fail_if_not_ssl: false
+    http_post_2xx:
+      prober: http
+      timeout: 5s
+      http:
+        valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+        method: POST
+        preferred_ip_protocol: "ip4"
+    tcp_connect:
+      prober: tcp
+      timeout: 5s
+    icmp:
+      prober: icmp
+      timeout: 5s
+      icmp:
+        preferred_ip_protocol: "ip4"
+    dns_tcp:
+      prober: dns
+      timeout: 5s
+      dns:
+        transport_protocol: "tcp"
+        preferred_ip_protocol: "ip4"
+        query_name: "kubernetes.default.svc.cluster.local"
+    dns_udp:
+      prober: dns
+      timeout: 5s
+      dns:
+        transport_protocol: "udp"
+        preferred_ip_protocol: "ip4"
+        query_name: "kubernetes.default.svc.cluster.local"
+
+# Extra configuration files
+extraConfigmapMounts: []
+
+# Extra secrets
+extraSecretMounts: []
+
+# Liveness and readiness probes
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod labels
+podLabels: {}
+
+# Priority class
+priorityClassName: ""
+
+# Host aliases
+hostAliases: []
+
+# Enable service links
+enableServiceLinks: false
+
+# Extra environment variables
+extraEnv: []
+
+# Extra volumes
+extraVolumes: []
+
+# Extra volume mounts
+extraVolumeMounts: []
