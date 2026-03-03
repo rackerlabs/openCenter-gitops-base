@@ -213,7 +213,7 @@ extraVolumes: []
 
 # Extra volume mounts
 extraVolumeMounts: []
-replicas: 2
+replicas: 1
 configReloader:
   enabled: true
   containerPort: 8080
