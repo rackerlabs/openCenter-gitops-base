@@ -1,15 +1,15 @@
-# Keycloak – Base Configuration
+# Keycloak - Base Configuration
 
-This directory contains the **base manifests** for deploying [Keycloak](https://www.keycloak.org/), an open-source identity and access management(IAM) solution that provides authentication, authorization, and single sign-on (SSO) capabilities for applications and services.  
-It is designed to be **consumed by cluster repositories** as a remote base, allowing each cluster to apply **custom overrides** as needed.
+This directory contains the **base manifests** for deploying [Keycloak](https://www.keycloak.org/), an IAM solution for authentication, authorization, and OIDC/SAML-based SSO.
 
-**About Keycloak:**
+## Public Repository Scope
 
-- Provides centralized **user authentication and authorization** for applications and APIs using OpenID Connect (OIDC) and SAML 2.0.  
-- Manages **users, roles, groups, and realms** through a web-based admin console or REST API.  
-- Supports **federated identity** integration with external identity providers such as Google, GitHub, or Microsoft Entra ID.  
-- Offers fine-grained access control through realm, client, and user configurations.  
-- Enables **token-based authentication** for Kubernetes and cloud-native workloads.  
-- Deployed via **Operator Lifecycle Manager(OLM)**, which automates the installation and lifecycle management of the Keycloak operator and its CRDs.  
-- Configured to use an **external PostgreSQL database** managed by the **Zalando Postgres Operator**, ensuring high availability, automated backups, and seamless scaling.  
-- Commonly used for securing Kubernetes dashboards, APIs, and internal services with OIDC-based authentication.
+- This public repository contains the **community/base** Keycloak deployment only.
+- Enterprise-specific image rewrites, private catalog sources, and enterprise-only resources must be delivered from a **private enterprise repository** as an overlay/component on top of this base.
+
+## Stage Layout
+
+- `00-postgres/`: PostgreSQL backing database resources.
+- `10-operator/`: OLM operator group and subscription resources.
+- `20-keycloak/`: Keycloak custom resource.
+- `30-oidc-rbac/`: Optional default OIDC RBAC resources.
