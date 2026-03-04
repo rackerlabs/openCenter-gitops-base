@@ -1,14 +1,15 @@
-# Operator Lifecycle Manager (OLM) – Base Configuration
+# Operator Lifecycle Manager (OLM) - Base Configuration
 
-This directory contains the **base manifests** for deploying the [Operator Lifecycle Manager (OLM)](https://olm.operatorframework.io/), a Kubernetes component that helps manage the installation, upgrade, and lifecycle of Operators.  
-It is designed to be **consumed by cluster repositories** as a remote base, allowing each cluster to apply **custom overrides** as needed.
+This directory contains the **base manifests** for deploying the [Operator Lifecycle Manager (OLM)](https://olm.operatorframework.io/), a Kubernetes component that manages installation, upgrade, and lifecycle of Operators.
 
-**About OLM:**
+## Public Repository Scope
 
-- Simplifies the **deployment and management of Operators** in Kubernetes clusters.  
-- Provides a consistent framework for installing, upgrading, and uninstalling Operators using declarative resources.  
-- Introduces core custom resources such as **ClusterServiceVersion (CSV)**, **CatalogSource**, **Subscription**, and **OperatorGroup**.  
-- Supports **dependency resolution** between Operators to ensure smooth upgrades and compatibility.  
-- Allows hosting and consuming **Operator catalogs** from internal or external registries.  
-- Enables cluster administrators to control Operator permissions and namespace scopes securely.
-- Improves operational consistency and reduces manual intervention in Operator lifecycle management.  
+- This public repository contains the **community/base** OLM deployment only.
+- Enterprise-specific manifest patches, private registry rewrites, and enterprise-only resources must be delivered from a **private enterprise repository** as an overlay/component on top of this base.
+
+## OLM
+
+- Installs and manages Operators using Kubernetes-native resources.
+- Provides `CatalogSource`, `Subscription`, and `OperatorGroup` driven workflows.
+- Handles Operator dependency resolution and upgrades.
+- Supports internal and external operator catalogs.
