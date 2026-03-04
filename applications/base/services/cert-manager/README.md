@@ -5,7 +5,7 @@ This directory contains the **base manifests** for deploying [Cert-manager](http
 ## Public Repository Scope
 
 - This public repository contains the **community/base** cert-manager deployment only.
-- Enterprise-specific values, chart source changes, and paid-only resources must be delivered from a **private enterprise repository** as an overlay/component on top of this base.
+- Enterprise-specific values, chart source changes, and enterprise-only resources must be delivered from a **private enterprise repository** as an overlay/component on top of this base.
 
 ## Cert-Manager
 

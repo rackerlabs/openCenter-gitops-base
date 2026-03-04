@@ -1,38 +1,22 @@
-# Headlamp – Base Configuration
+# Headlamp - Base Configuration
 
-This directory contains the **base manifests** for deploying [Headlamp](https://headlamp.dev/), a modern web-based Kubernetes dashboard built to simplify cluster management and visualization.  
+This directory contains the **base manifests** for deploying [Headlamp](https://headlamp.dev/), a modern web-based Kubernetes dashboard built to simplify cluster management and visualization.
 It is designed to be **consumed by cluster repositories** as a remote base, allowing each cluster to apply **custom overrides** as needed.
 
-**About Headlamp:**
+## Public Repository Scope
 
-- Provides an intuitive **web UI** for exploring and managing Kubernetes clusters.  
-- Supports **multi-cluster access**, RBAC-based authentication, and OIDC integration for secure user logins.  
-- Offers real-time insights into workloads, pods, services, storage, and cluster resources.  
-- Can be deployed both **in-cluster** or **externally** and accessed via an Ingress or LoadBalancer service.  
-- Enables plugin extensions and custom views for advanced integrations.  
-- Useful for developers, operators, and SREs who prefer a lightweight alternative to the classic Kubernetes Dashboard.  
-- Enhances troubleshooting and visibility without requiring kubectl access.  
+- This public repository contains the **community/base** headlamp deployment only.
+- Enterprise-specific values, chart source changes, and enterprise-only resources must be delivered from a **private enterprise repository** as an overlay/component on top of this base.
 
-## Architecture
+## Headlamp
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   User Browser  │───▶│    Ingress       │───▶│    Headlamp     │
-└─────────────────┘    └──────────────────┘    │     Pods        │
-                                               └─────────────────┘
-                                                         │
-                                                         ▼
-                                                ┌─────────────────┐
-                                                │  Kubernetes API │
-                                                │     Server      │
-                                                └─────────────────┘
-                                                         ▲
-                                                         │
-                                                ┌─────────────────┐
-                                                │  OIDC Provider  │
-                                                │  (Keycloak)     │
-                                                └─────────────────┘
-```
+- Provides an intuitive **web UI** for exploring and managing Kubernetes clusters.
+- Supports **multi-cluster access**, RBAC-based authentication, and OIDC integration for secure user logins.
+- Offers real-time insights into workloads, pods, services, storage, and cluster resources.
+- Can be deployed both **in-cluster** or **externally** and accessed via an Ingress or LoadBalancer service.
+- Enables plugin extensions and custom views for advanced integrations.
+- Useful for developers, operators, and SREs who prefer a lightweight alternative to the classic Kubernetes Dashboard.
+- Enhances troubleshooting and visibility without requiring kubectl access.
 
 ## OIDC Configuration
 
@@ -69,18 +53,18 @@ Ensure your OIDC provider supports these scopes:
 
 ### Cluster helm override values configuration
 
-``` yaml
+```yaml
 config:
-    oidc:
-        externalSecret:
-            enabled: false
-        secret:
-            create: true
-        clientID: opencenter
-        clientSecret: <REPLACEME>
-        issuerURL: https://auth.<account>.<env>.<region>.k8s.opencenter.cloud/realms/opencenter
-        scopes: openid profile email groups
-        callbackURL: https://headlamp.<account>.<env>.<region>.k8s.opencenter.cloud/oidc-callback
+  oidc:
+    externalSecret:
+      enabled: false
+    secret:
+      create: true
+    clientID: opencenter
+    clientSecret: <REPLACEME>
+    issuerURL: https://auth.<account>.<env>.<region>.k8s.opencenter.cloud/realms/opencenter
+    scopes: openid profile email groups
+    callbackURL: https://headlamp.<account>.<env>.<region>.k8s.opencenter.cloud/oidc-callback
 ```
 
-- Further manage the RBAC using `rbac-manager` service.
+- Further manage RBAC using the `rbac-manager` service.
