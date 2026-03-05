@@ -51,6 +51,7 @@ resource "local_file" "k8s_cluster" {
       kube_oidc_username_prefix = var.kube_oidc_username_prefix
       kube_oidc_groups_claim    = var.kube_oidc_groups_claim
       kube_oidc_groups_prefix   = var.kube_oidc_groups_prefix
+      coredns_external_zones    = var.coredns_external_zones
   })
 
   filename        = "./inventory/group_vars/k8s_cluster/k8s-cluster.yml"

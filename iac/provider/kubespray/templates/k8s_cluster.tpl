@@ -218,6 +218,21 @@ enable_coredns_k8s_external: false
 coredns_k8s_external_zone: k8s_external.local
 # Enable endpoint_pod_names option for kubernetes plugin
 enable_coredns_k8s_endpoint_pod_names: false
+%{ if length(coredns_external_zones) > 0 ~}
+# External zones configuration for CoreDNS
+coredns_external_zones:
+%{ for zone_config in coredns_external_zones ~}
+  - zones:
+%{ for zone in zone_config.zones ~}
+      - ${zone}
+%{ endfor ~}
+    nameservers:
+%{ for ns in zone_config.nameservers ~}
+      - ${ns}
+%{ endfor ~}
+    cache: ${zone_config.cache}
+%{ endfor ~}
+%{ endif ~}
 # Set forward options for upstream DNS servers in coredns (and nodelocaldns) config
 # dns_upstream_forward_extra_opts:
 #   policy: sequential
@@ -226,7 +241,6 @@ enable_coredns_k8s_endpoint_pod_names: false
 #   - 'fallthrough example.local'
 # Forward extra domains to the coredns kubernetes plugin
 # coredns_kubernetes_extra_domains: ''
-
 # Can be docker_dns, host_resolvconf or none
 resolvconf_mode: host_resolvconf
 # Deploy netchecker app to verify DNS resolve as an HTTP service
