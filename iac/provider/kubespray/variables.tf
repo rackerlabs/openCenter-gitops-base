@@ -42,6 +42,16 @@ variable "enable_nodelocaldns" {
   description = "Enable nodelocaldns for the cluster. This is useful for clusters with many nodes to reduce DNS query latency."
 }
 
+variable "coredns_external_zones" {
+  type = list(object({
+    zones       = list(string)
+    nameservers = list(string)
+    cache       = number
+  }))
+  default     = []
+  description = "External DNS zones to forward to specific nameservers. Each entry contains zones, nameservers, and cache TTL."
+}
+
 variable "k8s_hardening_enabled" {
   type        = bool
   default     = false
