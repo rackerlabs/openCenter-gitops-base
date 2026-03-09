@@ -32,10 +32,6 @@ spec:
       name: postgres-operator-values-base
       valuesKey: values.yaml
     - kind: Secret
-      name: postgres-operator-values-enterprise
-      valuesKey: hardened-enterprise.yaml
-      optional: true
-    - kind: Secret
       name: postgres-operator-values-override
       valuesKey: override.yaml
       optional: true
