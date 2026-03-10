@@ -71,7 +71,7 @@ module "node_master" {
   depends_on                     = [module.bastion, module.ssh-keypair, module.secgroup]
   additional_block_devices       = var.additional_block_devices_master
   availability_zone              = var.availability_zone
-  allowed_addresses              = [var.vrrp_ip, var.subnet_nodes, var.subnet_pods, var.subnet_services]
+  allowed_addresses              = concat([var.vrrp_ip, var.subnet_nodes, var.subnet_pods, var.subnet_services], var.additional_allowed_addresses_master)
   flavor_name                    = var.size_master.flavor
   image_id                       = var.image_id
   image_name                     = var.image_name
@@ -100,7 +100,7 @@ module "node_worker" {
   depends_on                     = [module.bastion, module.ssh-keypair, module.secgroup]
   additional_block_devices       = var.additional_block_devices_worker
   availability_zone              = var.availability_zone
-  allowed_addresses              = [var.subnet_nodes, var.subnet_pods, var.subnet_services]
+  allowed_addresses              = concat([var.subnet_nodes, var.subnet_pods, var.subnet_services], var.additional_allowed_addresses_worker)
   flavor_name                    = var.size_worker.flavor
   image_id                       = var.image_id
   image_name                     = var.image_name
@@ -128,7 +128,7 @@ module "node_worker_windows" {
   # count               = var.size_worker_windows.count > 0 ? 1 : 0
   depends_on                     = [module.bastion, module.secgroup]
   availability_zone              = var.availability_zone
-  allowed_addresses              = [var.subnet_nodes, var.subnet_pods, var.subnet_services]
+  allowed_addresses              = concat([var.subnet_nodes, var.subnet_pods, var.subnet_services], var.additional_allowed_addresses_worker)
   flavor_name                    = var.size_worker_windows.flavor
   image_id                       = var.image_id_windows
   image_name                     = var.image_name
@@ -268,7 +268,7 @@ module "additional_worker_pools" {
   flavor_name       = each.value.flavor_worker
   image_id          = each.value.image_id
   image_name        = each.value.image_name
-  allowed_addresses = [var.subnet_nodes, var.subnet_pods, var.subnet_services]
+  allowed_addresses = concat([var.subnet_nodes, var.subnet_pods, var.subnet_services], var.additional_allowed_addresses_worker)
 
   # Boot from volume configuration
   node_bfv_volume_size           = each.value.worker_node_bfv_volume_size
@@ -321,7 +321,7 @@ module "additional_worker_pools_windows" {
   flavor_name       = each.value.flavor_worker
   image_id          = each.value.image_id
   image_name        = each.value.image_name
-  allowed_addresses = length(each.value.allowed_addresses) > 0 ? each.value.allowed_addresses : [var.subnet_nodes, var.subnet_pods, var.subnet_services]
+  allowed_addresses = length(each.value.allowed_addresses) > 0 ? each.value.allowed_addresses : concat([var.subnet_nodes, var.subnet_pods, var.subnet_services], var.additional_allowed_addresses_worker)
 
   # Boot from volume configuration (Windows uses different parameter names)
   node_bfv_volume_size           = each.value.worker_node_bfv_volume_size

@@ -42,6 +42,18 @@ variable "additional_ports_worker" {
   default     = [] # No rules created by default
 }
 
+variable "additional_allowed_addresses_master" {
+  description = "List of additional single IP addresses to add to master node allowed_address_pairs"
+  type        = list(string)
+  default     = []
+}
+
+variable "additional_allowed_addresses_worker" {
+  description = "List of additional single IP addresses to add to worker node allowed_address_pairs"
+  type        = list(string)
+  default     = []
+}
+
 variable "ansible_inventory_enabled" {
   type    = bool
   default = false
