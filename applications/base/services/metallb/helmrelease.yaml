@@ -35,7 +35,3 @@ spec:
       name: metallb-values-override
       valuesKey: override.yaml
       optional: true
-    - kind: Secret
-      name: metallb-values-enterprise
-      valuesKey: hardened-enterprise.yaml
-      optional: true
