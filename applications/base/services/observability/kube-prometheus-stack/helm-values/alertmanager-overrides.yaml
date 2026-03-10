@@ -28,7 +28,7 @@ alertmanager:
         - receiver: warning_alerts_receiver
           continue: false
           matchers: [severity =~ "warning"]
-        - receiver: alert_proxy_receiver
+        - receiver: warning_alerts_receiver
           continue: false
           matchers: [severity =~ "critical"]
     receivers:
@@ -37,7 +37,3 @@ alertmanager:
         msteams_configs:
           - send_resolved: true
             webhook_url: ""
-      - name: alert_proxy_receiver
-        webhook_configs:
-          - url: http://alert-proxy.rackspace-system.svc.cluster.local/alert/process
-            send_resolved: true
