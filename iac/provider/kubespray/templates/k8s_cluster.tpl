@@ -241,6 +241,7 @@ coredns_external_zones:
 #   - 'fallthrough example.local'
 # Forward extra domains to the coredns kubernetes plugin
 # coredns_kubernetes_extra_domains: ''
+
 # Can be docker_dns, host_resolvconf or none
 resolvconf_mode: host_resolvconf
 # Deploy netchecker app to verify DNS resolve as an HTTP service
