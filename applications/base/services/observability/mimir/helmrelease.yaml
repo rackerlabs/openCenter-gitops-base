@@ -10,9 +10,10 @@ spec:
   driftDetection:
     mode: enabled
   install:
+    createNamespace: true
     remediation:
-      retries: 0
-      remediateLastFailure: false
+      retries: 3
+      remediateLastFailure: true
   upgrade:
     remediation:
       retries: 0
@@ -29,7 +30,7 @@ spec:
   valuesFrom:
     - kind: Secret
       name: mimir-values-base
-      valuesKey: hardened.yaml
+      valuesKey: values.yaml
     - kind: Secret
       name: mimir-values-override
       valuesKey: override.yaml
