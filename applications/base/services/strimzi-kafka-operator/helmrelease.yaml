@@ -32,10 +32,6 @@ spec:
       name: kafka-api-values-base
       valuesKey: values.yaml
     - kind: Secret
-      name: kafka-api-values-enterprise
-      valuesKey: hardened-enterprise.yaml
-      optional: true
-    - kind: Secret
       name: kafka-api-values-override
       valuesKey: override.yaml
       optional: true
