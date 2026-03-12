@@ -31,10 +31,6 @@ spec:
       name: loki-values-base
       valuesKey: values.yaml
     - kind: Secret
-      name: loki-values-enterprise
-      valuesKey: hardened-enterprise.yaml
-      optional: true
-    - kind: Secret
       name: loki-values-override
       valuesKey: override.yaml
       optional: true
