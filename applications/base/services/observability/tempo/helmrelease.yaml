@@ -29,7 +29,7 @@ spec:
   valuesFrom:
     - kind: Secret
       name: tempo-values-base
-      valuesKey: hardened.yaml
+      valuesKey: values.yaml
     - kind: Secret
       name: tempo-values-override
       valuesKey: override.yaml
