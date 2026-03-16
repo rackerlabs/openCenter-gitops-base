@@ -228,6 +228,12 @@ variable "network_id" {
   default = ""
 }
 
+variable "mtu" {
+  type        = number
+  default     = null
+  description = "MTU value for the network. If not set, the cloud provider default is used."
+}
+
 variable "node_cidr_mask_size" {
   type    = string
   default = ""
