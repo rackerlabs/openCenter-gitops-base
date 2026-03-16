@@ -13,6 +13,6 @@ secretGenerator:
     namespace: longhorn-system
     type: Opaque
     files:
-      - values.yaml=helm-values/values-v1.10.0.yaml
+      - values.yaml=helm-values/values-v1.11.0.yaml
     options:
       disableNameSuffixHash: true
