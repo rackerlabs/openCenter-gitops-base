@@ -35,7 +35,3 @@ spec:
       name: vsphere-csi-values-override
       valuesKey: override.yaml
       optional: true
-    - kind: Secret
-      name: vsphere-csi-values-enterprise
-      valuesKey: hardened-enterprise.yaml
-      optional: true
