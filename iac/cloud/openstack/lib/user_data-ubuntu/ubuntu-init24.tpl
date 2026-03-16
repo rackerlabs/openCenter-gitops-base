@@ -43,10 +43,12 @@ users:
   - default
   - name: ${ssh_user}
     sudo: ALL=(ALL) NOPASSWD:ALL
+%{if length(ssh_authorized_keys) > 0~}
     ssh_authorized_keys:
 %{for key in ssh_authorized_keys~}
       - ${key}
 %{endfor~}
+%{endif~}
 write_files:
 %{if pf9_onboard == true~}
   - content: |

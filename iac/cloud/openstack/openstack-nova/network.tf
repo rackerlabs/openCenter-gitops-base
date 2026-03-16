@@ -2,6 +2,7 @@ resource "openstack_networking_network_v2" "network" {
   count          = var.vlan_id == "" ? 1 : 0
   name           = "${var.naming_prefix}k8s"
   admin_state_up = "true"
+  mtu            = var.mtu
 }
 
 resource "openstack_networking_subnet_v2" "subnet" {
