@@ -39,10 +39,6 @@ spec:
       name: istiod-values-base
       valuesKey: values.yaml
     - kind: Secret
-      name: istiod-values-enterprise
-      valuesKey: hardened-enterprise.yaml
-      optional: true
-    - kind: Secret
       name: istiod-values-override
       valuesKey: override.yaml
       optional: true
