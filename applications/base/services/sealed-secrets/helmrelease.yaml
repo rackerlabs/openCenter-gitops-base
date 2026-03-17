@@ -30,7 +30,7 @@ spec:
   valuesFrom:
     - kind: Secret
       name: sealed-secrets-values-base
-      valuesKey: hardened.yaml
+      valuesKey: values.yaml
     - kind: Secret
       name: sealed-secrets-values-override
       valuesKey: override.yaml
