@@ -30,7 +30,7 @@ spec:
   valuesFrom:
     - kind: Secret
       name: openstack-csi-values-base
-      valuesKey: hardened.yaml
+      valuesKey: values.yaml
     - kind: Secret
       name: openstack-csi-values-override
       valuesKey: override.yaml
