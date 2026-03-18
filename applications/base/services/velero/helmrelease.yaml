@@ -30,7 +30,7 @@ spec:
   valuesFrom:
     - kind: Secret
       name: velero-values-base
-      valuesKey: hardened.yaml
+      valuesKey: values.yaml
     - kind: Secret
       name: velero-values-override
       valuesKey: override.yaml
