@@ -30,7 +30,7 @@ spec:
   valuesFrom:
     - kind: Secret
       name: harbor-values-base
-      valuesKey: hardened.yaml
+      valuesKey: values.yaml
     - kind: Secret
       name: harbor-values-override
       valuesKey: override.yaml

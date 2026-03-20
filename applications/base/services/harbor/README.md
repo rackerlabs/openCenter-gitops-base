@@ -3,6 +3,12 @@
 This directory contains the **base manifests** for deploying [Harbor](https://goharbor.io/), a cloud-native registry that stores, signs, and scans container images and Helm charts.  
 It is designed to be **consumed by cluster repositories** as a remote base, allowing each cluster to apply **custom overrides** as needed.
 
+The base values follow the same pattern as services like `cert-manager`:
+
+- base values file: `helm-values/values-<version>.yaml`
+- generated secret key: `values.yaml`
+- cluster override secret key: `override.yaml`
+
 **About Harbor:**
 
 - Acts as a **secure and centralized container registry** for storing and managing OCI images and Helm charts.  
