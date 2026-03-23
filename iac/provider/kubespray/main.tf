@@ -20,6 +20,9 @@ resource "local_file" "ansible_inventory" {
       ssh_user           = var.ssh_user
       worker_nodes       = var.worker_nodes
       windows_nodes      = var.windows_nodes
+      controlplane_node_labels = var.controlplane_node_labels
+      worker_node_labels       = var.worker_node_labels
+
   })
 
   filename        = "./inventory/inventory.yaml"

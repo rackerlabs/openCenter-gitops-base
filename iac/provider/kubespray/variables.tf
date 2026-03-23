@@ -245,3 +245,15 @@ variable "use_octavia" {
   type    = bool
   default = true
 }
+
+variable "controlplane_node_labels" {
+  type        = map(string)
+  default     = {}
+  description = "Map of Kubernetes labels to apply to control plane nodes. Keys and values are strings."
+}
+
+variable "worker_node_labels" {
+  type        = map(string)
+  default     = {}
+  description = "Map of Kubernetes labels to apply to worker nodes. Keys and values are strings."
+}

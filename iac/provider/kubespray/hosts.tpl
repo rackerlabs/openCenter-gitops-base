@@ -27,10 +27,12 @@ all:
             oc_worker_nodes: null
 
 oc_controlplane_nodes:
-%{ if network_plugin == "kube-ovn" ~}
+%{ if length(controlplane_node_labels) > 0 ~}
   vars:
     node_labels:
-      "kube-ovn/role": "master"
+%{ for key, value in controlplane_node_labels ~}
+      "${key}": "${value}"
+%{ endfor ~}
 %{ endif ~}
   hosts:
 %{ for master in master_nodes ~}
@@ -39,6 +41,13 @@ oc_controlplane_nodes:
 %{endfor ~}
 
 oc_worker_nodes:
+%{ if length(worker_node_labels) > 0 ~}
+  vars:
+    node_labels:
+%{ for key, value in worker_node_labels ~}
+      "${key}": "${value}"
+%{ endfor ~}
+%{ endif ~}
   hosts:
 %{ for worker in worker_nodes ~}
     ${worker.name}:
