@@ -7,7 +7,7 @@ We use OpenTofu to deploy virtual machines on OpenStack, using the outputs of th
 The terraform state file will be stored in an S3 bucket
 
 This will configure a Ubuntu 24.04 Linux VM as a deployment node that will be used to bootstrap and deploy openCenter clusters. The VM can go away once the resulting files have been committed to a code repository.
-The deployment node could be your laptop or an existing Linux VM. 
+The deployment node could be your laptop or an existing Linux VM.
 
 - [openCenter Deployment Guide](#opencenter-deployment-guide)
   - [Pre Requisites](#pre-requisites)
@@ -49,13 +49,14 @@ The deployment node could be your laptop or an existing Linux VM.
       - [kube-ovn](#kube-ovn)
       - [kube-ovn + celium](#kube-ovn--celium)
     - [infra module](#infra-module)
-- [To Do's:](#to-dos)
+- [To Do's](#to-dos)
 
 # openCenter Deployment Guide
 
 ## Pre Requisites
 
 ### Packages
+
 - Python >=3.10 (Already in Ubuntu 24.04)
 - python3.10-venv
 - Terraform >=v1.11.1
@@ -66,6 +67,7 @@ The deployment node could be your laptop or an existing Linux VM.
 We create a `.bin` directory within each cluster directory that will hold the binaries that are compatible with the current cluster version. This allows to have different clusters at different release versions.
 
 #### Add local binaries to PATH
+
 In order to make it easier to run the local binaries you can add them to your path in the current shell session by running this from the cluster directory.
 
 ```
@@ -77,6 +79,7 @@ export PATH=${BIN}:${PATH}
 ### OpenTofu Requirements
 
 #### Create S3 Bucket
+
 The S3 bucket will be used to store the OpenTofu state file remotely.
 
 - Give it a unique name
@@ -89,12 +92,13 @@ The S3 bucket will be used to store the OpenTofu state file remotely.
 
 - In the Resource URN replace BUCKET_NAME with the name of the S3 bucket from the previous step
 - This policy will allow a single account to access the OpenTofu state file of multiple clusters by allowing a directory structure:
+
 ```
 ├── BUCKET_NAME
 │   ├── CLUSTER_NAME
 │   │   ├── tfstate
-│   │   |	└── terraform.tfstate
-│   │   |	└── terraform.tfstate.tflock
+│   │   | └── terraform.tfstate
+│   │   | └── terraform.tfstate.tflock
 ```
 
 IAM Policy:
@@ -133,8 +137,8 @@ IAM Policy:
 }
 ```
 
-
 #### Create AWS User
+
 - Give it a clear name like "customer name".
 - Leave console access unchecked.
 - Attach policies directly and pick the policy created above.
@@ -156,7 +160,6 @@ The starting point is to copy the init directory into the new clusters directory
 │       ├── demo-cluster
 │       └── production
 ```
-
 
 ### Initialize the new cluster OpenTofu files
 
@@ -211,11 +214,13 @@ locals {
 ```
 
 ### Create application credentials
+
 Click on UserCenter > Application Credentials > Create Application Credentials
+
 - Set a unique name
 - Set an expiration. Empty doesnt expire.
 - Roles
--  - load-balancer_member
+- load-balancer_member
 - - reader
 - - member
 - - network_member
@@ -225,6 +230,7 @@ Leave Unrestricted unchecked.
 Add a Description with the purpose of the credentials.
 
 This will download a json file with credentials:
+
 ```json
 {
   "id": "f07a1d5ff5254c0b9cda848353169891",
@@ -238,11 +244,13 @@ This will download a json file with credentials:
 ### Export credentials
 
 #### Option 1 - Application credentials
+
 Export the openstack user and S3 credentials
+
 ```
 
-export TF_VAR_application_credential_id='longidstring'
-export TF_VAR_application_credential_secret='securesecret'
+export TF_VAR_os_application_credential_id='longidstring'
+export TF_VAR_os_application_credential_secret='securesecret'
 export AWS_ACCESS_KEY_ID=<KEY>
 export AWS_SECRET_ACCESS_KEY=<KEY>
 ```
@@ -250,6 +258,7 @@ export AWS_SECRET_ACCESS_KEY=<KEY>
 #### Option 2 - Username and API Key
 
 Export the openstack user and S3 credentials
+
 ```
 
 export TF_VAR_openstack_user_password='api-key'
@@ -258,12 +267,12 @@ export AWS_ACCESS_KEY_ID=<KEY>
 export AWS_SECRET_ACCESS_KEY=<KEY>
 ```
 
-
 ## Deploy Cluster
 
 ```
 # terraform init
 ```
+
 The terraform init needs to access modules in git which can be done with SSH keys or a Git Token.
 If you want to use the SSH Key method each module source will use: `git@github.com:rackerlabs/openCenter.git`
 For Token `github.com/rackerlabs/openCenter.git`
@@ -277,19 +286,21 @@ If the init succeeds you are good to apply
 ## Use the cluster
 
 ### Kubeconfig
+
 A Kubeconfig file will be copied to the local cluster directory during the OpenTofu apply to provide access to the Kubernetes API.
+
 ```
 export KUBECONFIG=${PWD}/kubeconfig.yaml
 
 kubectl get nodes
 ```
+
 ### Ansible
 
 An ansible inventory file is created in the path `CLUSTER_DIR/inventory/inventory.yaml` that is pre-configured to use the bastion server allowing secure access into the virtual machine servers.
 
-
-
 ## Post Deployment Steps
+
 ### Deploy a CNI
 
 We deploy kubespray without a CNI to allow for the option of deploying any of the supported CNIs.
@@ -306,10 +317,12 @@ Part of the hardening configuration is to allow Kubelet to renew its certificate
 **NOTE:** If the kubelet_rotate_server_certificates is true and the cluster doesnt have a CNI installed, the kubespray ansible playbook run will fail to deploy the `kubelet-csr-approver` helm chart.
 
 Apply terraform to have it update the hardeninig yaml template file.
+
 ```
 # terraform apply
 
 ```
+
 Then
 
 ```
@@ -323,15 +336,17 @@ ansible-playbook -f 10 -b upgrade-cluster.yml -e "@../inventory/k8s_hardening.ym
 ### Bootstrap Flux
 
 #### Steps
+
 - A Git repository based on the openCenter-gitops-template.git
 - An SSH Key with Read permissions to the repository as deploy keys. Stored in PasswordSafe
 - Add public key as a deploy key to the repository
 - export KUBECONFIG variable
 - Install Flux curl flux.sh | kubectl apply -f -
 - Run the flux boostrap git command to initialize the repository using the ssh key
-- 
+-
 
 ### Commit to Git
+
 We want to make sure we commit and exclude the correct files to the repository
 
 Files need encryption. Generated from the cluster hardening and CA certs.
@@ -342,19 +357,20 @@ Files need encryption. Generated from the cluster hardening and CA certs.
 
 There is a fix in place so that if we run cluster operations without the files present in the directory structure, the playbook will grab a copy from the masters to avoid creating a new one and drift. But we still need a process where we pull the files from a store and place them in the directory structure before making changes in the cluster
 
-https://github.com/kubernetes-sigs/kubespray/pull/4255
+<https://github.com/kubernetes-sigs/kubespray/pull/4255>
 
 ## Save the SSH Keys to PasswordSafe
-The files `id_rsa` and `id_rsa.pub` need to be saved to the customer's password safe in https://passwordsafe.corp.rackspace.com/projects/32616
+
+The files `id_rsa` and `id_rsa.pub` need to be saved to the customer's password safe in <https://passwordsafe.corp.rackspace.com/projects/32616>
 
 ## Save the Kubeconfig file in PasswordSsafe
-The file `kubeconfig.yaml` needs to be saved to the customer's password safe in https://passwordsafe.corp.rackspace.com/projects/32616
 
-
+The file `kubeconfig.yaml` needs to be saved to the customer's password safe in <https://passwordsafe.corp.rackspace.com/projects/32616>
 
 # Outcome
 
 ## Virtual Machines
+
 - Bastion Server
 - Control Plane Servers
 - Wroker Node Servers
@@ -374,44 +390,53 @@ demo-cluster-wn1   Ready    <none>          17h   v1.31.4
 # Infra Module Configuration Options
 
 ### openCenter
+
 | key | type | default | description |
 | --- | --- | --- | --- |
 | cluster_name | string | ""  | sets the name of the cluster, openstack project and user. |
 | statsu | string | "config"  | sets the name of the cluster, openstack project and user. |
 
 ### gitops
+
 | key | type | default | description |
 | --- | --- | --- | --- |
 | kube | string | ""  | sets the name of the cluster, openstack project and user. |
 | statsu | string | "config"  | sets the name of the cluster, openstack project and user. |
 
 ### Kubernetes
+
 #### kubespray
+
 | key | type | default | description |
 | --- | --- | --- | --- |
 | kube | string | ""  | sets the name of the cluster, openstack project and user. |
 
-####  calico
+#### calico
+
 | key | type | default | description |
 | --- | --- | --- | --- |
 |  |  | ""  | |
 
-####  cilium
+#### cilium
+
 | key | type | default | description |
 | --- | --- | --- | --- |
 |  |  | ""  | |
 
-####  kube-ovn
+#### kube-ovn
+
 | key | type | default | description |
 | --- | --- | --- | --- |
 |  |  | ""  | |
 
-####  kube-ovn + celium
+#### kube-ovn + celium
+
 | key | type | default | description |
 | --- | --- | --- | --- |
 |  |  | ""  | |
 
 ### infra module
+
 | key | type | default | description |
 | --- | --- | --- | --- |
 | cluster_name | string | ""  | sets the name of the cluster, openstack project and user. |
@@ -471,7 +496,8 @@ demo-cluster-wn1   Ready    <none>          17h   v1.31.4
 | worker_node_bfv_size_windows | number | 0   | Boot from volume size for Windows worker nodes |
 | worker_node_bfv_type_windows | string | "local" | Boot from volume type for Windows worker nodes |
 
-# To Do's:
+# To Do's
+
 - Add support for app credentials auth
 - Document how to switch remote state teraform between S3 and Local
 - Review Git Tokens as a method of giving access to customer repo to Flux.
