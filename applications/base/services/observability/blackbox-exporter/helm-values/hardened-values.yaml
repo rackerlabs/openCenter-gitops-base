@@ -121,6 +121,14 @@ prometheusRule:
       annotations:
         summary: "Blackbox SSL certificate expiry (instance {{ $labels.instance }})"
         description: "SSL certificate expires in less than 30 days\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+    - alert: BlackboxSslCertificateExpiryCrit
+      expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 7
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Blackbox SSL certificate expiry (instance {{ $labels.instance }})"
+        description: "SSL certificate expires in less than 7 days\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
 # Blackbox exporter configuration
 config:
